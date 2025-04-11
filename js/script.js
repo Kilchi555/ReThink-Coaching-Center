@@ -47,7 +47,7 @@ window.onload = function() {
       color: '#0069ff',
       textColor: '#ffffff'
     });
-  
+
     // Event-Listener für das Erstellen eines weiteren Buttons an einem anderen Ort auf der Seite
     document.getElementById('calendly-button-container').addEventListener('click', function() {
       // Hier kannst du einen zweiten Button mit verschiedenen Parametern einfügen

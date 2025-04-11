@@ -405,6 +405,13 @@
     background-color: #4892fa;; /* Nur der Button wird bei Hover dunkler */
   }
 
+  /* Style für den Hover-Effekt des Calendly-Buttons */
+#calendly-badge-content:hover {
+  background-color: #4892fa; /* Deine Wunschfarbe für den Hover-Effekt */
+  color: #ffffff; /* Textfarbe bei Hover */
+}
+
+
 
  /* ====== Footer ====== */
 .footer {
