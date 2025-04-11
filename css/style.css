@@ -1,0 +1,525 @@
+/* style.css */
+
+/* ====== Grundlegendes Setup ====== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+
+  p {
+    font-size: clamp(1rem, 1.5vw, 2rem);
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    background-color: #f9f9f9;
+    color: #333;
+  }
+/* ====== Container ====== */
+/* ====== Sticky Navbar ====== */
+.header {
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between; /* Stellt sicher, dass das Logo links und die Navbar rechts ist */
+  align-items: center;
+  padding: 0 20px; /* Optional, sorgt für Abstand auf beiden Seiten */
+}
+
+/* Der Container für das Logo */
+.header .container {
+  display: flex;
+  align-items: center; /* Vertikale Ausrichtung */
+  padding: 1.5rem;
+}
+
+.logo {
+  margin-left: 0; /* Entfernen von zusätzlichem Abstand */
+  height: 60px; /* Stell sicher, dass die Höhe proportional bleibt */
+}
+
+/* Navbar */
+.navbar {
+  display: flex; /* Zeigt die Links horizontal an */
+  justify-content: flex-end; /* Die Links nach rechts ausrichten */
+}
+
+.navbar ul {
+  list-style: none;
+  display: flex;
+  gap: 2rem; /* Abstand zwischen den Links */
+}
+
+.navbar a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  font-size: clamp(1rem, 1.5vw, 2rem);
+}
+
+.navbar a:hover {
+  color: #4892fa;
+}
+
+.navbar a:hover::after {
+  width: 100%;
+}
+  
+/* ====== Mobile Menü Toggle ====== */
+.menu-toggle {
+  display: none;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    display: none; /* Versteckt die Navigation standardmäßig */
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    width: 100%;
+    text-align: center;
+  }
+
+  .navbar.active {
+    display: block; /* Zeigt die Navigation, wenn sie aktiviert wird */
+  }
+
+  .navbar ul {
+    display: block;
+    padding: 0;
+  }
+
+  .navbar li {
+    padding: 1rem 0;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+}
+
+  
+  /* ====== Hero Section ====== */
+  .hero {
+    background: linear-gradient(135deg, #e0f0ff, #ffffff);
+    padding: 4rem 1rem;
+    text-align: center;
+  }
+  
+  .hero h1 {
+    font-size: clamp(1.5rem, 3vw, 4rem);
+    margin-bottom: 1rem;
+  }
+  
+  .hero p {
+    font-size: clamp(1rem, 1.8vw, 2.5rem);
+    margin-bottom: 1rem;
+  }
+  
+  /* ====== Über Uns ====== */
+  .about-section h2,
+  .testimonials-section h2,
+  .faq-section h2 {
+    font-size: clamp(1.5rem, 3vw, 4rem);
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .intro {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  #about {
+    padding: 10%;
+  }
+
+  .about-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-top: 2rem;
+    text-align: center;
+    align-items: center;   /* vertikale Zentrierung */
+  }
+
+  p {
+    padding-top: 10px;
+  }
+  
+  #coaches {
+    padding: 10%;
+  }
+
+  .about-text {
+    flex: 1;
+  }
+  
+  .about-image img {
+    max-width: 60%;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 1200px) {
+    .about-content {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .about-image img {
+      max-width: 100%;
+    }
+  }
+  
+  /* ====== Coaches ====== */
+  .coach-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  
+  .coach-card {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: transform 0.3s;
+    text-align: center;
+  }
+  
+  .coach-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .coach-card img {
+    width: 100%;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* ====== Testimonials ====== */
+
+  #testimonials {
+    padding: 10%;
+  }
+
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+    
+  }
+  
+  .testimonial-card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    
+  }
+  
+  .testimonial-text {
+    font-style: italic;
+  }
+  
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+  }
+  
+  .testimonial-author img {
+    width: 50px;
+    border-radius: 50%;
+    margin-right: 1rem;
+  }
+  
+  .name {
+    font-weight: bold;
+  }
+  
+  /* ====== FAQ Section ====== */
+  .faq-section {
+    padding: 10%;
+  }
+
+  .faq-question {
+    background: #fff;
+    border: none;
+    padding: 1.5rem;
+    text-align: left;
+    width: 100%;
+    font-size: clamp(1rem, 2vw, 3rem);
+    font-weight: bold;
+    cursor: pointer;
+    border-bottom: 1px solid #ccc;
+    transition: background 0.2s ease;
+  }
+  
+  .faq-question:hover {
+    background: #f0f0f0;
+  }
+  
+  .faq-answer {
+    display: none;
+    padding: 1rem;
+    background: #f9f9f9;
+  }
+  
+  .faq-item.active .faq-answer {
+    display: block;
+  }
+  
+/* ====== Container ====== */
+/* ====== Sticky Navbar ====== */
+.header {
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between; /* Stellt sicher, dass das Logo links und die Navbar rechts ist */
+  align-items: center;
+  padding: 0 20px; /* Optional, sorgt für Abstand auf beiden Seiten */
+}
+
+/* Der Container für das Logo */
+.header .container {
+  display: flex;
+  align-items: center; /* Vertikale Ausrichtung */
+  padding: 1.5rem;
+}
+
+.logo {
+  margin-left: 0; /* Entfernen von zusätzlichem Abstand */
+  height: 60px; /* Stell sicher, dass die Höhe proportional bleibt */
+}
+
+/* Navbar */
+.navbar {
+  display: flex; /* Zeigt die Links horizontal an */
+  justify-content: flex-end; /* Die Links nach rechts ausrichten */
+}
+
+.navbar ul {
+  list-style: none;
+  display: flex;
+  gap: 2rem; /* Abstand zwischen den Links */
+}
+
+.navbar a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  font-size: clamp(1rem, 1.5vw, 2rem);
+}
+
+.navbar a:hover {
+  color: #4892fa;
+}
+
+.navbar a:hover::after {
+  width: 100%;
+}
+
+/* ====== Mobile Menü Toggle ====== */
+.menu-toggle {
+  display: none;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  /* Das Menü ist standardmäßig ausgeblendet */
+  .navbar {
+    display: none; 
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    width: 100%;
+    text-align: center;
+  }
+
+  .navbar.active {
+    display: block; /* Zeigt das Menü an, wenn es aktiviert wird */
+  }
+
+  .navbar ul {
+    display: block;
+    padding: 0;
+  }
+
+  .navbar li {
+    padding: 1rem 0;
+  }
+
+  .menu-toggle {
+    display: block; /* Zeigt den Button in der mobilen Ansicht an */
+  }
+}
+
+  
+  #calendly-button-container {
+    /* Container ohne Hintergrundfarbe, damit nur der Button betroffen ist */
+    display: inline-block; /* Container nur so groß wie der Button */
+    margin: 20px 0;
+  }
+  
+  .calendly-button {
+    background-color: #0069ff;
+    color: #ffffff;
+    padding: 15px 25px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-weight: bold;
+  }
+  
+  .calendly-button:hover {
+    background-color: #4892fa;; /* Nur der Button wird bei Hover dunkler */
+  }
+
+
+ /* ====== Footer ====== */
+.footer {
+  background-color: #333;
+  color: #fff;
+  padding: 40px 20px;
+  text-align: left;
+}
+
+.footer .container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.footer-section {
+  flex: 1;
+  margin: 10px;
+}
+
+.footer-section h3 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-section ul li {
+  margin: 8px 0;
+}
+
+.footer-section ul li a {
+  text-decoration: none;
+  color: #ccc;
+  transition: color 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+  color: #4892fa;
+}
+
+/* Social Media Icons */
+.footer-section .social-media ul {
+  display: flex;
+  gap: 1rem;
+}
+
+.footer-section .social-media ul li a {
+  color: #ccc;
+  font-size: 1.5rem;
+  transition: color 0.3s ease;
+}
+
+.footer-section .social-media ul li a:hover {
+  color: #4892fa;
+}
+
+/* Footer Bottom */
+.footer-bottom {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+/* ====== Responsive Styles ====== */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column; /* Stack the sections vertically */
+    align-items: center; /* Center align all sections */
+  }
+
+  .footer-section {
+    width: 100%;
+    margin-bottom: 20px; /* Add space between sections */
+  }
+
+  .footer-section h3 {
+    text-align: center; /* Center align the section titles */
+  }
+
+  .footer-section ul li {
+    text-align: center; /* Center align the links */
+  }
+
+  .footer-section .social-media ul {
+    justify-content: center; /* Center align social media icons */
+  }
+}
+
+/* ====== For small mobile devices (max-width: 480px) ====== */
+@media (max-width: 480px) {
+  .footer {
+    padding: 20px 10px;
+  }
+
+  .footer-section h3 {
+    font-size: 1rem; /* Slightly smaller text for small screens */
+  }
+
+  .footer-section ul li a {
+    font-size: 0.9rem; /* Slightly smaller links */
+  }
+
+  .footer-section .social-media ul li a {
+    font-size: 1.2rem; /* Slightly smaller icons */
+  }
+}
