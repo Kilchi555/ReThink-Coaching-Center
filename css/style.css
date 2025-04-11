@@ -113,7 +113,6 @@
   }
 }
 
-  
   /* ====== Hero Section ====== */
   .hero {
     background: linear-gradient(135deg, #e0f0ff, #ffffff);
@@ -380,6 +379,10 @@
   .menu-toggle {
     display: block; /* Zeigt den Button in der mobilen Ansicht an */
   }
+
+  section {
+    scroll-margin-top: 80px; /* Die Höhe der Navbar */
+  }
 }
 
   
@@ -399,19 +402,8 @@
     transition: background-color 0.3s ease;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     font-weight: bold;
+    font-size: clamp(1rem, 1.5vw, 2rem);
   }
-  
-  .calendly-button:hover {
-    background-color: #4892fa;; /* Nur der Button wird bei Hover dunkler */
-  }
-
-  /* Style für den Hover-Effekt des Calendly-Buttons */
-#calendly-badge-content:hover {
-  background-color: #4892fa; /* Deine Wunschfarbe für den Hover-Effekt */
-  color: #ffffff; /* Textfarbe bei Hover */
-}
-
-
 
  /* ====== Footer ====== */
 .footer {
