@@ -522,3 +522,16 @@
     font-size: 1.2rem; /* Slightly smaller icons */
   }
 }
+
+#loginButton {
+  background-color: #0069ff;
+  color: #ffffff;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: clamp(1rem, 1vw, 1.5rem);
+  margin: 10px 0px;
+}
