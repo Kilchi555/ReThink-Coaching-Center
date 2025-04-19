@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de" scroll-behavior="smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registrieren – Mental Coach</title>
+  <link rel="stylesheet" href="register.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="/">
+        <img src="public/images/ReThinkCoaching Logo.webp" alt="Mental Coach Logo" class="logo" height="100px" loading="lazy"/>
+      </a>
+    </div>
+  </header>
+
+  <section id="register-section" class="register-section">
+    <div class="container">
+      <h2>Registrieren</h2>
+      <form id="register-form">
+        <div class="form-group">
+          <label for="register-email">E-Mail:</label>
+          <input type="email" id="register-email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="register-password">Passwort:</label>
+          <input type="password" id="register-password" name="password" required>
+        </div>
+        <button type="submit" class="register-button">Registrieren</button>
+        <p id="register-error" class="error-message hidden">Registrierung fehlgeschlagen.</p>
+      </form>
+      <p>Bereits ein Konto? <a href="/login.html">Einloggen</a></p>
+    </div>
+  </section>
+
+  <script src="register.js"></script>
+</body>
+</html>

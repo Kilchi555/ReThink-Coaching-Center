@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de" scroll-behavior="smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – Mental Coach</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="dashboard.css"/>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="/"> <img src="images/ReThinkCoaching Logo.webp" alt="Mental Coach Logo" class="logo" height="300px" loading="lazy"/>
+      </a>
+    </div>
+    <nav class="navbar">
+      <ul>
+        <li><a href="#" id="logoutButton">Logout</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section id="user-dashboard-area" class="container">
+    <h1>Dashboard</h1>
+    <div id="customer-dashboard" class="dashboard-section hidden">
+      <h2>Kunden-Dashboard</h2>
+      <p>Willkommen im Kundenbereich!</p>
+      <section id="customer-appointments-section">
+        <h3>Meine Termine</h3>
+        <h4>Vergangene Termine</h4>
+        <ul id="past-appointments-list"></ul>
+        <h4>Zukünftige Termine</h4>
+        <ul id="future-appointments-list"></ul>
+      </section>
+    </div>
+
+    <div id="employee-dashboard" class="dashboard-section hidden">
+      <h2>Mitarbeiter-Dashboard</h2>
+      <p>Willkommen im Mitarbeiterbereich!</p>
+    </div>
+
+    <div id="admin-dashboard" class="dashboard-section hidden">
+      <h2>Admin-Dashboard</h2>
+      <p>Willkommen im Adminbereich!</p>
+    </div>
+  </section>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
