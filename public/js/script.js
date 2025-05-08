@@ -111,38 +111,67 @@ loginForm.addEventListener('submit', async (event) => {
   const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
 
+  // Definiere die Backend-URL. Du kannst auch eine absolute URL verwenden,
+  // besonders wenn dein Frontend nicht vom selben Express-Server ausgeliefert wird.
+  // const backendUrl = 'http://localhost:3000'; // Beispiel für absolute URL
+  // const loginEndpoint = '/api/login'; // Oder `${backendUrl}/api/login`
+
   try {
-    const response = await fetch('/api/login', {
+    const response = await fetch('/api/login', { // Bleiben wir vorerst bei der relativen URL
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password }),
+      // *** WICHTIG ***: Füge diese Zeile hinzu, damit der Browser Cookies sendet und empfängt
+      credentials: 'include'
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Login erfolgreich:', data);
+    const responseData = await response.json(); // Parsen die Antwort immer, um Fehlerdetails zu erhalten
+
+    if (response.ok) { // Prüfen auf Status 200-299
+      console.log('Login erfolgreich:', responseData);
       loginSection.style.display = 'none';
       loginError.style.display = 'none';
-      localStorage.setItem('userId', data.userId);
-      localStorage.setItem('userRole', data.role);
+
+      // Die Speicherung in localStorage ist optional. Die Authentifizierung selbst
+      // wird durch den Session-Cookie gehandhabt, der vom Browser gespeichert wird,
+      // wenn credentials: 'include' gesetzt ist. Du kannst localStorage verwenden,
+      // um z.B. den Benutzernamen oder die Rolle für die Anzeige im Frontend zu speichern.
+      localStorage.setItem('userId', responseData.userId);
+      localStorage.setItem('userRole', responseData.role);
+      localStorage.setItem('userEmail', responseData.email); // Email könnte auch nützlich sein
+
       // Weiterleitung zum Dashboard basierend auf der Rolle
-      handleLoginSuccess(data.role);
-      // Erneutes Laden der Termine für den eingeloggten Benutzer
-      fetchAndDisplayPastAppointments();
-      fetchAndDisplayFutureAppointments();
-    } else {
-      const errorData = await response.json();
-      console.error('Login fehlgeschlagen:', errorData);
-      loginError.style.display = 'block';
+      handleLoginSuccess(responseData.role);
+
+      // Jetzt, da der Benutzer eingeloggt ist (und der Browser den Cookie hat),
+      // kannst du die Termine abrufen. Diese Aufrufe müssen ebenfalls credentials: 'include' nutzen!
+      fetchAndDisplayPastAppointments(); // <-- Stelle sicher, dass diese Funktionen existieren und credentials: 'include' nutzen
+      fetchAndDisplayFutureAppointments(); // <-- Stelle sicher, dass diese Funktionen existieren und credentials: 'include' nutzen
+
+    } else { // Nicht-2xx Status (z.B. 401, 400)
+      console.error('Login fehlgeschlagen:', response.status, responseData.error);
+      loginError.textContent = responseData.error || 'Login fehlgeschlagen.'; // Nutze die Fehlermeldung vom Backend
+      loginError.classList.remove('hidden'); // Zeige die Fehlermeldung an (basierend auf deiner CSS-Klasse)
+      // Optional: Entferne die Daten aus localStorage, falls vorhanden
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userEmail');
     }
-  } catch (error) {
+  } catch (error) { // Netzwerkfehler etc.
     console.error('Fehler beim Login-Request:', error);
-    loginError.textContent = 'Verbindungsfehler.';
-    loginError.style.display = 'block';
+    loginError.textContent = 'Verbindungsfehler. Bitte versuche es später erneut.';
+    loginError.classList.remove('hidden');
+    // Optional: Entferne die Daten aus localStorage, falls vorhanden
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
   }
 });
+
+// Stelle sicher, dass deine CSS-Klasse .hidden display: none; hat
+// .hidden { display: none; }
 
 function handleLoginSuccess(role) {
   customerDashboard.style.display = 'none';
