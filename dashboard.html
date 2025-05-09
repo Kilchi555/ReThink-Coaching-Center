@@ -10,32 +10,52 @@
 <body>
   <header class="header">
     <div class="container">
-      <a href="/"> <img src="images/ReThinkCoaching Logo.webp" alt="Mental Coach Logo" class="logo" height="300px" loading="lazy"/>
+      <a href="/"> <img src="images/ReThinkCoaching Logo.webp" alt="Mental Coach Logo" class="logo" height="50px" loading="lazy"/>
       </a>
     </div>
   <h1 id="dashboard-heading">Dashboard</h1>
   <p id="user-email"></p>
 </header>
-  <section id="admin-section" class="hidden">
+  <main>
+  <section id="admin-section" class="hidden dashboard-section">
     <h2>Admin-Bereich</h2>
-    <p id="admin-statistics">Lade Admin-Daten...</p>
+    <div id="admin-loading" class="loading">
+      <div class="spinner"></div>
+      <span>Lade Admin-Daten...</span>
+    </div>
+    <p id="admin-statistics" class="hidden">Lade Admin-Daten...</p>
   </section>
   
-  <section id="employee-section" class="hidden">
+  <section id="employee-section" class="hidden dashboard-section">
     <h2>Mitarbeiter-Bereich</h2>
-    <p id="employee-statistics">Lade Mitarbeiter-Daten...</p>
+    <div id="employee-loading" class="loading">
+      <div class="spinner"></div>
+      <span>Lade Mitarbeiter-Daten...</span>
+    </div>
+    <p id="employee-statistics" class="hidden">Lade Mitarbeiter-Daten...</p>
   </section>
   
-  <section id="customer-section" class="hidden">
+  <section id="customer-section" class="hidden dashboard-section">
     <h2>Kundenbereich</h2>
     <div id="customer-appointments">
       <h3>Ihre Termine</h3>
-      <p id="no-appointments-message">Lade Ihre Termine...</p>
+      <div id="customer-loading" class="loading">
+        <div class="spinner"></div>
+        <span>Lade Ihre Termine...</span>
+      </div>
+      <p id="no-appointments-message" class="hidden">Lade Ihre Termine...</p>
     </div>
+        <div id="customer-notes">
+          <h3>Ihre Notizen</h3>
+          <textarea id="customer-notes-input" class="note-textarea" placeholder="Geben Sie hier Ihre Notizen ein..."></textarea>
+          <button id="save-customer-note-button" class="save-note-button">Notiz speichern</button>
+          <p id="customer-notes-message" class="hidden"></p>
+        </div>
   </section>
   
 
   <button id="logout-button">Logout</button>
+  </main>
 
   <script>
    document.addEventListener('DOMContentLoaded', () => {
@@ -58,6 +78,53 @@
   } else if (role === 'kunde') {
     document.getElementById('customer-section').classList.remove('hidden');
     fetchCustomerAppointments();  // Lade Kundentermine
+        const notesInput = document.getElementById('customer-notes-input');
+        const saveNotesButton = document.getElementById('save-customer-note-button');
+        const notesMessage = document.getElementById('customer-notes-message');
+
+        saveNotesButton.addEventListener('click', () => {
+            const noteText = notesInput.value.trim();
+            if (noteText === '') {
+                notesMessage.textContent = 'Bitte geben Sie eine Notiz ein.';
+                notesMessage.classList.remove('hidden');
+                notesMessage.classList.add('error-message');
+                return;
+            }
+
+            notesMessage.textContent = 'Notiz wird gespeichert...';
+            notesMessage.classList.remove('hidden');
+            notesMessage.classList.remove('error-message');
+
+            fetch('/api/customer/notes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ note: noteText }),
+                credentials: 'include',
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Fehler beim Speichern der Notiz');
+                }
+                return response.json();
+            })
+            .then(data => {
+                notesMessage.textContent = 'Notiz gespeichert!';
+                notesMessage.classList.remove('error-message');
+                notesMessage.classList.remove('hidden');
+                notesInput.value = '';
+                 setTimeout(() => {
+                    notesMessage.classList.add('hidden');
+                }, 2000);
+            })
+            .catch(error => {
+                console.error('Fehler beim Speichern der Notiz:', error);
+                notesMessage.textContent = 'Fehler beim Speichern der Notiz.';
+                notesMessage.classList.add('error-message');
+                notesMessage.classList.remove('hidden');
+            });
+        });
   }
 
   document.getElementById('logout-button').addEventListener('click', async () => {
@@ -68,37 +135,54 @@
 });
 
 async function fetchAdminStatistics() {
+  const loadingElement = document.getElementById('admin-loading');
+  const statisticsElement = document.getElementById('admin-statistics');
+  loadingElement.classList.remove('hidden');
+  statisticsElement.classList.add('hidden');
   try {
     const response = await fetch('/api/admin/statistics', { credentials: 'include' });
     const data = await response.json();
     document.getElementById('admin-statistics').textContent = `Gesamtzahl der Nutzer: ${data.totalUsers}`;
-    // Hier könnten mehr Admin-spezifische Daten angezeigt werden
   } catch (error) {
     console.error('Fehler beim Abrufen der Admin-Daten:', error);
     document.getElementById('admin-statistics').textContent = 'Fehler beim Laden der Admin-Daten.';
+  } finally {
+    loadingElement.classList.add('hidden');
+    statisticsElement.classList.remove('hidden');
   }
 }
 
 async function fetchEmployeeStatistics() {
+  const loadingElement = document.getElementById('employee-loading');
+  const statisticsElement = document.getElementById('employee-statistics');
+  loadingElement.classList.remove('hidden');
+  statisticsElement.classList.add('hidden');
   try {
     const response = await fetch('/api/employee/statistics', { credentials: 'include' });
     const data = await response.json();
     document.getElementById('employee-statistics').textContent = `Anzahl der erledigten Sitzungen: ${data.completedSessions}`;
-    // Hier könnten weitere Mitarbeiter-spezifische Daten angezeigt werden
   } catch (error) {
     console.error('Fehler beim Abrufen der Mitarbeiter-Daten:', error);
     document.getElementById('employee-statistics').textContent = 'Fehler beim Laden der Mitarbeiter-Daten.';
+  } finally {
+    loadingElement.classList.add('hidden');
+    statisticsElement.classList.remove('hidden');
   }
 }
 
 async function fetchCustomerAppointments() {
+  const loadingElement = document.getElementById('customer-loading');
+  const appointmentsList = document.getElementById('customer-appointments');
+  const noAppointmentsMessage = document.getElementById('no-appointments-message');
+  loadingElement.classList.remove('hidden');
+  appointmentsList.classList.add('hidden');
+  noAppointmentsMessage.classList.add('hidden');
   try {
     const [pastResponse, futureResponse] = await Promise.all([
       fetch('/api/past-appointments', { credentials: 'include' }),
       fetch('/api/future-appointments', { credentials: 'include' })
     ]);
 
-    // Fehlerbehandlung für die beiden Fetch-Anfragen
     if (!pastResponse.ok || !futureResponse.ok) {
       throw new Error('Fehler beim Abrufen der Termine');
     }
@@ -106,77 +190,389 @@ async function fetchCustomerAppointments() {
     const pastData = await pastResponse.json();
     const futureData = await futureResponse.json();
 
-    const appointmentsList = document.getElementById('customer-appointments');
-    appointmentsList.innerHTML = ''; // Leere den Placeholder
+    appointmentsList.innerHTML = '';
 
-    // Anzeige vergangener Termine
     if (pastData && pastData.length > 0) {
       const pastAppointmentsTitle = document.createElement('h3');
       pastAppointmentsTitle.textContent = 'Vergangene Termine';
+      pastAppointmentsTitle.classList.add('appointment-title');
       appointmentsList.appendChild(pastAppointmentsTitle);
 
       pastData.forEach(appointment => {
         const appointmentItem = document.createElement('p');
-        
-        // Überprüfe, ob start_time und end_time gültige ISO-Strings sind
-        const startDate = new Date(appointment.start_time);
-        const endDate = new Date(appointment.end_time);
+        let startDate, endDate;
 
-        // Falls das Datum ungültig ist, überspringe es
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          console.error('Ungültiges Datum:', appointment.start_time, appointment.end_time);
-          return;
+        try {
+          startDate = new Date(appointment.start_time);
+          endDate = new Date(appointment.end_time);
+        } catch (e) {
+          console.error('Fehler beim Erstellen von Datumsobjekten:', e, appointment);
+          startDate = new Date();
+          endDate = new Date();
         }
 
-        appointmentItem.textContent = `Termin am: ${startDate.toLocaleString()} - ${endDate.toLocaleString()}`;
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          console.error('Ungültiges Datum:', appointment.start_time, appointment.end_time);
+          startDate = new Date();
+          endDate = new Date();
+        }
+
+        const dateOptions = {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        };
+        const timeOptions = {
+          hour: '2-digit',
+          minute: '2-digit'
+        };
+        appointmentItem.textContent = `Termin am: ${startDate.toLocaleDateString('de-DE', dateOptions)} - ${endDate.toLocaleTimeString('de-DE', timeOptions)}`;
+        appointmentItem.classList.add('appointment-item');
+
+        // Anzeige der Notizen, falls vorhanden
+        if (appointment.extendedProps && appointment.extendedProps.clientNote) { // Überprüfe, ob extendedProps existiert
+            const noteElement = document.createElement('p');
+            noteElement.textContent = `Ihre Notiz: ${appointment.extendedProps.clientNote}`;
+            noteElement.classList.add('note-text');
+            appointmentItem.appendChild(noteElement);
+        }
         appointmentsList.appendChild(appointmentItem);
       });
     } else {
       const noPastAppointmentsMessage = document.createElement('p');
       noPastAppointmentsMessage.textContent = 'Keine vergangenen Termine.';
+      noPastAppointmentsMessage.classList.add('no-appointments-message');
       appointmentsList.appendChild(noPastAppointmentsMessage);
     }
 
-    // Anzeige zukünftiger Termine
     if (futureData && futureData.length > 0) {
       const futureAppointmentsTitle = document.createElement('h3');
       futureAppointmentsTitle.textContent = 'Zukünftige Termine';
+      futureAppointmentsTitle.classList.add('appointment-title');
       appointmentsList.appendChild(futureAppointmentsTitle);
 
       futureData.forEach(appointment => {
         const appointmentItem = document.createElement('p');
-        
-        // Überprüfe, ob start_time und end_time gültige ISO-Strings sind
-        const startDate = new Date(appointment.start_time);
-        const endDate = new Date(appointment.end_time);
+        let startDate, endDate;
 
-        // Falls das Datum ungültig ist, überspringe es
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          console.error('Ungültiges Datum:', appointment.start_time, appointment.end_time);
-          return;
+        try {
+          startDate = new Date(appointment.start_time);
+          endDate = new Date(appointment.end_time);
+        } catch (e) {
+          console.error('Fehler beim Erstellen von Datumsobjekten:', e, appointment);
+          startDate = new Date();
+          endDate = new Date();
         }
 
-        appointmentItem.textContent = `Termin am: ${startDate.toLocaleString()} - ${endDate.toLocaleString()}`;
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          console.error('Ungültiges Datum:', appointment.start_time, appointment.end_time);
+          startDate = new Date();
+          endDate = new Date();
+        }
+
+        const dateOptions = {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        };
+        const timeOptions = {
+          hour: '2-digit',
+          minute: '2-digit'
+        };
+        appointmentItem.textContent = `Termin am: ${startDate.toLocaleDateString('de-DE', dateOptions)} - ${endDate.toLocaleTimeString('de-DE', timeOptions)}`;
+        appointmentItem.classList.add('appointment-item');
+        // Anzeige der Notizen, falls vorhanden
+        if (appointment.extendedProps && appointment.extendedProps.clientNote) {  // Überprüfe, ob extendedProps existiert
+            const noteElement = document.createElement('p');
+            noteElement.textContent = `Ihre Notiz: ${appointment.extendedProps.clientNote}`;
+            noteElement.classList.add('note-text');
+            appointmentItem.appendChild(noteElement);
+        }
         appointmentsList.appendChild(appointmentItem);
       });
     } else {
       const noFutureAppointmentsMessage = document.createElement('p');
       noFutureAppointmentsMessage.textContent = 'Keine zukünftigen Termine.';
+      noFutureAppointmentsMessage.classList.add('no-appointments-message');
       appointmentsList.appendChild(noFutureAppointmentsMessage);
     }
-
   } catch (error) {
     console.error('Fehler beim Abrufen der Kundentermine:', error);
     document.getElementById('no-appointments-message').textContent = 'Fehler beim Laden Ihrer Termine.';
+  } finally {
+    loadingElement.classList.add('hidden');
+    appointmentsList.classList.remove('hidden');
+    noAppointmentsMessage.classList.remove('hidden');
   }
 }
 
   </script>
 
   <style>
-    .hidden {
-      display: none;
-    }
+    /* Grundlegende Reset-Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
+}
+
+body {
+  background-color: #f9f9f9;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  padding: 0;
+  margin-top: 60px; /* Platz für den Header */
+}
+
+header {
+  background-color: #34495e;
+  color: white;
+  padding: 1rem 2rem;
+  text-align: center;
+  border-radius: 0;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+}
+
+header .container{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+header h1 {
+  font-size: 2rem;
+  margin-bottom: 0;
+}
+
+header .logo {
+  max-width: 100px;
+  margin-right: 1rem;
+}
+
+header p{
+  font-size: 0.9rem;
+  color: #eee;
+}
+
+
+h2, h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+  text-align: center;
+}
+
+
+p {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 1rem;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Bereich für die Sektionen (Admin, Mitarbeiter, Kunde) */
+section {
+  margin-bottom: 2rem;
+}
+
+.dashboard-section{
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+
+#customer-appointments {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin-top: 1rem;
+}
+
+#customer-appointments h3 {
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+  text-align: left;
+}
+
+/* Kunden-Termine */
+#customer-appointments p {
+  background-color: #ecf0f1;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #d3d3d3;
+}
+
+#no-appointments-message {
+  color: #e74c3c;
+  font-size: 1rem;
+  font-style: italic;
+  padding: 1rem;
+  background-color: #f8f0f0;
+  border-radius: 0.5rem;
+  border: 1px solid #e74c3c;
+  margin-top: 1rem;
+}
+
+/* Logout Button */
+#logout-button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: #e74c3c;
+  color: white;
+  font-size: 1rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin-top: 2rem;
+  align-self: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#logout-button:hover {
+  background-color: #c0392b;
+  transform: scale(1.05);
+}
+
+#logout-button:active {
+  transform: scale(1);
+}
+
+/* Styling für Notizen */
+.note-textarea {
+  width: 100%;
+  height: 80px;
+  padding: 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 0.375rem;
+  margin-top: 1rem;
+  resize: vertical;
+}
+
+.save-note-button {
+  background-color: #3498db;
+  color: white;
+  padding: 0.75rem 1.2rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.save-note-button:hover {
+  background-color: #217dbb;
+  transform: scale(1.05);
+}
+
+.save-note-button:active {
+  transform: scale(1);
+}
+
+/* Styling der Listen für Termine */
+li {
+  background-color: #f0f0f0;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d3d3d3;
+}
+
+li strong {
+  font-weight: bold;
+  color: #2c3e50;
+}
+.note-text{
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #7f8c8d;
+  margin-top: 0.5rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  body {
+    padding-top: 50px;
+  }
+  header {
+    padding: 0.5rem;
+  }
+  header .container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  header .logo{
+    margin-bottom: 0.5rem;
+  }
+  header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  main {
+    padding: 1rem;
+  }
+  section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  #customer-appointments{
+    padding: 1.5rem;
+  }
+  #logout-button {
+    margin-top: 1rem;
+    align-self: center;
+  }
+}
+
+/* Spinner Animation */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.spinner {
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  border: 0.25rem solid rgba(125, 211, 252, 0.3);
+  border-top-color: #7dd3fc;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
   </style>
 </body>
 </html>

@@ -1,4 +1,4 @@
-// public/js/login.js - Code für die Login-Seite (index.html)
+// login.js - Code für die Login-Seite (index.html)
 
 console.log("login.js geladen!");
 
