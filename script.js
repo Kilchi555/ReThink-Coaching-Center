@@ -40,15 +40,31 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- Mobile Menu Toggle ---
-    const menuToggle = document.getElementById('menu-toggle');
-    const navbar = document.getElementById('navbar');
-
-    if (menuToggle && navbar) {
-        menuToggle.addEventListener('click', function () {
-            navbar.classList.toggle('active');
+    document.addEventListener("DOMContentLoaded", function () {
+        const menuToggle = document.getElementById("menu-toggle");
+        const navbar = document.getElementById("navbar");
+      
+        menuToggle.addEventListener("click", function () {
+          navbar.classList.toggle("active");
         });
-    }
+      });
+      
 
-    // Hinweis: Der Calendly *Badge* Widget wird separat in deiner HTML initialisiert
+  // Accordion
+  const accordions = document.querySelectorAll(".accordion");
+
+  accordions.forEach((accordion) => {
+    accordion.addEventListener("click", function () {
+      // Toggle active class
+      this.classList.toggle("active");
+
+      // Toggle panel
+      const panel = this.nextElementSibling;
+      if (panel.style.maxHeight) {
+        panel.style.maxHeight = null;
+      } else {
+        panel.style.maxHeight = panel.scrollHeight + "px";
+      }
+    });
+  });
 });
