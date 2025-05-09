@@ -44,7 +44,7 @@ app.use(session({
 }));
 
 // Statische Dateien aus dem Hauptverzeichnis servieren (für den Fall, dass dein Frontend Build-Artefakte dort liegen)
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname)));
 
 // **API-Endpunkte**
 
@@ -88,7 +88,7 @@ app.post('/api/register', async (req, res) => {
 
   } catch (error) {
     console.error('Fehler bei der Registrierung:', error);
-    return res.status(500).json({ error: 'Ein interner Serverfehler ist aufgetreten.' });
+    return res.status(500).json({ error: 'Fehler bei der Registrierung.' });
   }
 });
 
@@ -121,7 +121,7 @@ app.post('/api/login', async (req, res) => {
 
   } catch (error) {
     console.error('Fehler beim Login:', error);
-    return res.status(500).json({ error: 'Ein interner Serverfehler ist aufgetreten.' });
+    return res.status(500).json({ error: 'Fehler beim Login.' });
   }
 });
 
@@ -148,7 +148,7 @@ app.get('/api/user', async (req, res) => {
       }
     } catch (error) {
       console.error('Fehler beim Abrufen der Benutzerdaten:', error);
-      return res.status(500).json({ error: 'Ein interner Serverfehler ist aufgetreten.' });
+      return res.status(500).json({ error: 'Fehler beim Abrufen der Benutzerdaten.' });
     }
   } else {
     console.log('Keine Benutzer-ID in der Session gefunden.'); // Logge, wenn keine ID vorhanden ist
@@ -157,65 +157,119 @@ app.get('/api/user', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html')); // Serviere dein Frontend von hier
+  res.sendFile(path.join(__dirname, 'index.html')); // Serviere dein Frontend von hier
 });
 
 // Handler für vergangene Termine
+// Beispiel-Endpoint zum Abrufen der Termine mit Notizen
 app.get('/api/past-appointments', async (req, res) => {
-  console.log('>>> /api/past-appointments wurde aufgerufen!');
+  console.log('>>> /api/past-appointments aufgerufen!');
 
   if (!req.session.userId) {
     return res.status(401).json({ error: 'Nicht authentifiziert.' });
   }
 
+  const userId = req.session.userId;
+
   try {
-    console.log('Abrufen vergangener Termine für Benutzer-ID:', req.session.userId);
+    // Wenn der Benutzer ein Mitarbeiter ist (also eine staff_id vorhanden ist), gebe ihm alle vergangenen Termine, bei denen er als Mitarbeiter eingetragen ist
+    const result = await pool.query(`
+  SELECT 
+    a.id,
+    a.title,
+    a.start_time,
+    a.end_time,
+    u.email AS customer_email,
+    s.email AS staff_email,
+    cn.note AS client_note,
+    sn.note AS staff_note
+  FROM appointments a
+  LEFT JOIN users u ON u.id = a.user_id
+  LEFT JOIN users s ON s.id = a.staff_id
+  LEFT JOIN client_notes cn ON cn.appointment_id = a.id
+  LEFT JOIN staff_notes sn ON sn.appointment_id = a.id
+  WHERE a.start_time > NOW()
+    AND (a.user_id = $1 OR a.staff_id = $1)
+  ORDER BY a.start_time ASC
+`, [req.session.userId]);
 
-    // Annahme: Du hast eine Tabelle namens 'appointments' mit Spalten wie 'user_id', 'start_time', 'end_time', etc.
-    const pastAppointmentsResult = await pool.query(
-      `SELECT * FROM appointments
-       WHERE user_id = $1 AND end_time < NOW()
-       ORDER BY end_time DESC`,
-      [req.session.userId]
-    );
-    const pastAppointments = pastAppointmentsResult.rows;
+const events = result.rows.map(row => ({
+  id: row.id,
+  title: row.title || 'Termin',
+  start: new Date(row.start_time).toISOString(), // Hier sicherstellen, dass der Wert im richtigen Format ist
+  end: new Date(row.end_time).toISOString(),     // Hier ebenfalls
+  extendedProps: {
+    customerEmail: row.customer_email,
+    staffEmail: row.staff_email,
+    clientNote: row.client_note,
+    staffNote: row.staff_note,
+  }
+}));
 
-    console.log('Gefundene vergangene Termine:', pastAppointments);
-    return res.status(200).json(pastAppointments);
+return res.status(200).json(events);
+
 
   } catch (error) {
     console.error('Fehler beim Abrufen vergangener Termine:', error);
-    return res.status(500).json({ error: 'Ein interner Serverfehler ist aufgetreten.' });
+    return res.status(500).json({ error: 'Fehler beim Abrufen der vergangenen Termine.' });
   }
 });
 
 // Handler für zukünftige Termine
 app.get('/api/future-appointments', async (req, res) => {
-  console.log('>>> /api/future-appointments wurde aufgerufen!');
+  console.log('>>> /api/future-appointments aufgerufen!');
 
   if (!req.session.userId) {
     return res.status(401).json({ error: 'Nicht authentifiziert.' });
   }
 
+  const userId = req.session.userId;
+
   try {
-    console.log('Abrufen zukünftiger Termine für Benutzer-ID:', req.session.userId);
+    // Wenn der Benutzer ein Mitarbeiter ist (also eine staff_id vorhanden ist), gebe ihm alle zukünftigen Termine, bei denen er als Mitarbeiter eingetragen ist
+    const result = await pool.query(`
+  SELECT 
+    a.id,
+    a.title,
+    a.start_time,
+    a.end_time,
+    u.email AS customer_email,
+    s.email AS staff_email,
+    cn.note AS client_note,
+    sn.note AS staff_note
+  FROM appointments a
+  LEFT JOIN users u ON u.id = a.user_id
+  LEFT JOIN users s ON s.id = a.staff_id
+  LEFT JOIN client_notes cn ON cn.appointment_id = a.id
+  LEFT JOIN staff_notes sn ON sn.appointment_id = a.id
+  WHERE a.start_time > NOW()
+    AND (a.user_id = $1 OR a.staff_id = $1)
+  ORDER BY a.start_time ASC
+`, [req.session.userId]);
 
-    const futureAppointmentsResult = await pool.query(
-      `SELECT * FROM appointments
-       WHERE user_id = $1 AND start_time > NOW()
-       ORDER BY start_time ASC`, // Geändert: start_time > NOW() und ORDER BY start_time ASC
-      [req.session.userId]
-    );
-    const futureAppointments = futureAppointmentsResult.rows;
+const events = result.rows.map(row => ({
+  id: row.id,
+  title: row.title || 'Termin',
+  start: new Date(row.start_time).toISOString(), // Hier sicherstellen, dass der Wert im richtigen Format ist
+  end: new Date(row.end_time).toISOString(),     // Hier ebenfalls
+  extendedProps: {
+    customerEmail: row.customer_email,
+    staffEmail: row.staff_email,
+    clientNote: row.client_note,
+    staffNote: row.staff_note,
+  }
+}));
 
-    console.log('Gefundene zukünftige Termine:', futureAppointments);
-    return res.status(200).json(futureAppointments);
+return res.status(200).json(events);
+
 
   } catch (error) {
     console.error('Fehler beim Abrufen zukünftiger Termine:', error);
-    return res.status(500).json({ error: 'Ein interner Serverfehler ist aufgetreten.' });
+    return res.status(500).json({ error: 'Fehler beim Abrufen der zukünftigen Termine.' });
   }
 });
+
+
 
 // Handler für termingebundene Kunden-Notizen
 app.get('/api/client-notes/:appointmentId', async (req, res) => {
@@ -236,7 +290,7 @@ app.get('/api/client-notes/:appointmentId', async (req, res) => {
       return res.status(200).json(notes);
   } catch (error) {
       console.error('Fehler beim Abrufen der Klienten-Notizen:', error);
-      return res.status(500).json({ error: 'Interner Serverfehler.' });
+      return res.status(500).json({ error: 'Fehler beim Abrufen der Klienten-Notizen.' });
   }
 });
 
@@ -259,7 +313,7 @@ app.get('/api/staff-notes/:appointmentId', async (req, res) => {
       return res.status(200).json(notes);
   } catch (error) {
       console.error('Fehler beim Abrufen der Mitarbeiter-Notizen:', error);
-      return res.status(500).json({ error: 'Interner Serverfehler.' });
+      return res.status(500).json({ error: 'Fehler beim Abrufen der Mitarbeiter-Notizen' });
   }
 });
 
@@ -279,7 +333,7 @@ app.get('/api/user-notes', async (req, res) => {
     return res.status(200).json(notes);
   } catch (error) {
     console.error('Fehler beim Abrufen der allgemeinen Benutzer-Notizen:', error);
-    return res.status(500).json({ error: 'Interner Serverfehler.' });
+    return res.status(500).json({ error: 'Fehler beim Abrufen der allgemeinen Benutzer-Notizen.' });
   }
 });
 
@@ -299,9 +353,92 @@ app.get('/api/staff-user-notes', async (req, res) => {
         return res.status(200).json(notes);
     } catch (error) {
         console.error('Fehler beim Abrufen der allgemeinen Mitarbeiter-Notizen:', error);
-        return res.status(500).json({ error: 'Interner Serverfehler.' });
+        return res.status(500).json({ error: 'Fehler beim Abrufen der allgemeinen Mitarbeiter-Notizen.' });
     }
 });
+
+app.post('/api/update-note', async (req, res) => {
+  const { appointmentId, note, type } = req.body;
+  const userId = req.session.userId;
+
+  console.log('>>> /api/update-note wurde aufgerufen!');
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Nicht authentifiziert.' });
+  }
+
+  if (!appointmentId || !note || !type) {
+    return res.status(400).json({ error: 'Termin-ID, Notiz und Typ sind erforderlich.' });
+  }
+
+  try {
+    // Überprüfen, ob der Termin existiert und der Benutzer berechtigt ist, die Notiz zu bearbeiten
+    const appointmentResult = await pool.query(
+      'SELECT * FROM appointments WHERE id = $1 AND (user_id = $2 OR staff_id = $2)',
+      [appointmentId, userId]
+    );
+
+    if (appointmentResult.rows.length === 0) {
+      return res.status(403).json({ error: 'Du bist nicht berechtigt, diese Notiz zu bearbeiten.' });
+    }
+
+    // Je nach Rolle (Kunde oder Mitarbeiter) die Notiz aktualisieren
+    let updateQuery;
+    let params;
+
+    if (type === 'customer') {
+      updateQuery = 'UPDATE appointments SET customer_note = $1 WHERE id = $2 AND user_id = $3';
+      params = [note, appointmentId, userId];
+    } else if (type === 'employee') {
+      updateQuery = 'UPDATE appointments SET employee_note = $1 WHERE id = $2 AND staff_id = $3';
+      params = [note, appointmentId, userId];
+    } else {
+      return res.status(400).json({ error: 'Ungültiger Notiztyp.' });
+    }
+
+    // Notiz in der entsprechenden Tabelle aktualisieren
+    const result = await pool.query(updateQuery, params);
+
+    if (result.rowCount > 0) {
+      return res.status(200).json({ message: 'Notiz erfolgreich gespeichert.' });
+    } else {
+      return res.status(500).json({ error: 'Fehler beim Speichern der Notiz.' });
+    }
+
+  } catch (error) {
+    console.error('Fehler beim Aktualisieren der Notiz:', error);
+    return res.status(500).json({ error: 'Fehler beim Aktualisieren der Notiz.' });
+  }
+});
+
+app.post('/api/book-appointment', async (req, res) => {
+  const { start_time, end_time } = req.body;
+  const userId = req.session.userId;
+
+  if (!userId) return res.status(401).json({ error: 'Nicht angemeldet' });
+
+  try {
+    const conflict = await pool.query(
+      'SELECT * FROM appointments WHERE start_time < $2 AND end_time > $1',
+      [start_time, end_time]
+    );
+
+    if (conflict.rows.length > 0) {
+      return res.status(409).json({ error: 'Zeitraum ist bereits gebucht' });
+    }
+
+    await pool.query(
+      'INSERT INTO appointments (user_id, start_time, end_time) VALUES ($1, $2, $3)',
+      [userId, start_time, end_time]
+    );
+
+    res.status(200).json({ message: 'Termin gebucht' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Fehler beim Speichern' });
+  }
+});
+
 
 // Starte den Server nur einmal am Ende der Datei
 app.listen(port, () => {

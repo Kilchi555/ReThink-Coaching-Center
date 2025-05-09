@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard – Mental Coach</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="dashboard.css"/>
 </head>
 <body>
@@ -13,38 +13,170 @@
       <a href="/"> <img src="images/ReThinkCoaching Logo.webp" alt="Mental Coach Logo" class="logo" height="300px" loading="lazy"/>
       </a>
     </div>
-    <nav class="navbar">
-      <ul>
-        <li><a href="#" id="logoutButton">Logout</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <section id="user-dashboard-area" class="container">
-    <h1>Dashboard</h1>
-    <div id="customer-dashboard" class="dashboard-section hidden">
-      <h2>Kunden-Dashboard</h2>
-      <p>Willkommen im Kundenbereich!</p>
-      <section id="customer-appointments-section">
-        <h3>Meine Termine</h3>
-        <h4>Vergangene Termine</h4>
-        <ul id="past-appointments-list"></ul>
-        <h4>Zukünftige Termine</h4>
-        <ul id="future-appointments-list"></ul>
-      </section>
-    </div>
-
-    <div id="employee-dashboard" class="dashboard-section hidden">
-      <h2>Mitarbeiter-Dashboard</h2>
-      <p>Willkommen im Mitarbeiterbereich!</p>
-    </div>
-
-    <div id="admin-dashboard" class="dashboard-section hidden">
-      <h2>Admin-Dashboard</h2>
-      <p>Willkommen im Adminbereich!</p>
+  <h1 id="dashboard-heading">Dashboard</h1>
+  <p id="user-email"></p>
+</header>
+  <section id="admin-section" class="hidden">
+    <h2>Admin-Bereich</h2>
+    <p id="admin-statistics">Lade Admin-Daten...</p>
+  </section>
+  
+  <section id="employee-section" class="hidden">
+    <h2>Mitarbeiter-Bereich</h2>
+    <p id="employee-statistics">Lade Mitarbeiter-Daten...</p>
+  </section>
+  
+  <section id="customer-section" class="hidden">
+    <h2>Kundenbereich</h2>
+    <div id="customer-appointments">
+      <h3>Ihre Termine</h3>
+      <p id="no-appointments-message">Lade Ihre Termine...</p>
     </div>
   </section>
+  
 
-  <script src="dashboard.js"></script>
+  <button id="logout-button">Logout</button>
+
+  <script>
+   document.addEventListener('DOMContentLoaded', () => {
+  const role = localStorage.getItem('userRole');
+  const email = localStorage.getItem('userEmail');
+
+  if (!role) {
+    window.location.href = '/login.html';
+    return;
+  }
+
+  document.getElementById('user-email').textContent = `Eingeloggt als: ${email}`;
+
+  if (role === 'admin') {
+    document.getElementById('admin-section').classList.remove('hidden');
+    fetchAdminStatistics();  // Lade Admin-Daten
+  } else if (role === 'mitarbeiter') {
+    document.getElementById('employee-section').classList.remove('hidden');
+    fetchEmployeeStatistics();  // Lade Mitarbeiter-Daten
+  } else if (role === 'kunde') {
+    document.getElementById('customer-section').classList.remove('hidden');
+    fetchCustomerAppointments();  // Lade Kundentermine
+  }
+
+  document.getElementById('logout-button').addEventListener('click', async () => {
+    await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+    localStorage.clear();
+    window.location.href = '/login.html';
+  });
+});
+
+async function fetchAdminStatistics() {
+  try {
+    const response = await fetch('/api/admin/statistics', { credentials: 'include' });
+    const data = await response.json();
+    document.getElementById('admin-statistics').textContent = `Gesamtzahl der Nutzer: ${data.totalUsers}`;
+    // Hier könnten mehr Admin-spezifische Daten angezeigt werden
+  } catch (error) {
+    console.error('Fehler beim Abrufen der Admin-Daten:', error);
+    document.getElementById('admin-statistics').textContent = 'Fehler beim Laden der Admin-Daten.';
+  }
+}
+
+async function fetchEmployeeStatistics() {
+  try {
+    const response = await fetch('/api/employee/statistics', { credentials: 'include' });
+    const data = await response.json();
+    document.getElementById('employee-statistics').textContent = `Anzahl der erledigten Sitzungen: ${data.completedSessions}`;
+    // Hier könnten weitere Mitarbeiter-spezifische Daten angezeigt werden
+  } catch (error) {
+    console.error('Fehler beim Abrufen der Mitarbeiter-Daten:', error);
+    document.getElementById('employee-statistics').textContent = 'Fehler beim Laden der Mitarbeiter-Daten.';
+  }
+}
+
+async function fetchCustomerAppointments() {
+  try {
+    const [pastResponse, futureResponse] = await Promise.all([
+      fetch('/api/past-appointments', { credentials: 'include' }),
+      fetch('/api/future-appointments', { credentials: 'include' })
+    ]);
+
+    // Fehlerbehandlung für die beiden Fetch-Anfragen
+    if (!pastResponse.ok || !futureResponse.ok) {
+      throw new Error('Fehler beim Abrufen der Termine');
+    }
+
+    const pastData = await pastResponse.json();
+    const futureData = await futureResponse.json();
+
+    const appointmentsList = document.getElementById('customer-appointments');
+    appointmentsList.innerHTML = ''; // Leere den Placeholder
+
+    // Anzeige vergangener Termine
+    if (pastData && pastData.length > 0) {
+      const pastAppointmentsTitle = document.createElement('h3');
+      pastAppointmentsTitle.textContent = 'Vergangene Termine';
+      appointmentsList.appendChild(pastAppointmentsTitle);
+
+      pastData.forEach(appointment => {
+        const appointmentItem = document.createElement('p');
+        
+        // Überprüfe, ob start_time und end_time gültige ISO-Strings sind
+        const startDate = new Date(appointment.start_time);
+        const endDate = new Date(appointment.end_time);
+
+        // Falls das Datum ungültig ist, überspringe es
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          console.error('Ungültiges Datum:', appointment.start_time, appointment.end_time);
+          return;
+        }
+
+        appointmentItem.textContent = `Termin am: ${startDate.toLocaleString()} - ${endDate.toLocaleString()}`;
+        appointmentsList.appendChild(appointmentItem);
+      });
+    } else {
+      const noPastAppointmentsMessage = document.createElement('p');
+      noPastAppointmentsMessage.textContent = 'Keine vergangenen Termine.';
+      appointmentsList.appendChild(noPastAppointmentsMessage);
+    }
+
+    // Anzeige zukünftiger Termine
+    if (futureData && futureData.length > 0) {
+      const futureAppointmentsTitle = document.createElement('h3');
+      futureAppointmentsTitle.textContent = 'Zukünftige Termine';
+      appointmentsList.appendChild(futureAppointmentsTitle);
+
+      futureData.forEach(appointment => {
+        const appointmentItem = document.createElement('p');
+        
+        // Überprüfe, ob start_time und end_time gültige ISO-Strings sind
+        const startDate = new Date(appointment.start_time);
+        const endDate = new Date(appointment.end_time);
+
+        // Falls das Datum ungültig ist, überspringe es
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          console.error('Ungültiges Datum:', appointment.start_time, appointment.end_time);
+          return;
+        }
+
+        appointmentItem.textContent = `Termin am: ${startDate.toLocaleString()} - ${endDate.toLocaleString()}`;
+        appointmentsList.appendChild(appointmentItem);
+      });
+    } else {
+      const noFutureAppointmentsMessage = document.createElement('p');
+      noFutureAppointmentsMessage.textContent = 'Keine zukünftigen Termine.';
+      appointmentsList.appendChild(noFutureAppointmentsMessage);
+    }
+
+  } catch (error) {
+    console.error('Fehler beim Abrufen der Kundentermine:', error);
+    document.getElementById('no-appointments-message').textContent = 'Fehler beim Laden Ihrer Termine.';
+  }
+}
+
+  </script>
+
+  <style>
+    .hidden {
+      display: none;
+    }
+  </style>
 </body>
 </html>

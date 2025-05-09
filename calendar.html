@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terminbuchung</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #calendar {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <h2>Terminbuchung</h2>
+  <div id="calendar"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('calendar');
+
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        locale: 'de',
+        slotMinTime: '08:00:00',
+        slotMaxTime: '18:00:00',
+        selectable: true,
+        selectMirror: true,
+        select: async function (info) {
+          const confirmed = confirm(`Möchtest du einen Termin buchen von ${info.startStr} bis ${info.endStr}?`);
+          if (confirmed) {
+            try {
+              const res = await fetch('/api/book-appointment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  start_time: info.startStr,
+                  end_time: info.endStr
+                })
+              });
+
+              const data = await res.json();
+              if (res.ok) {
+                alert('Termin erfolgreich gebucht!');
+                calendar.refetchEvents();
+              } else {
+                alert(data.error || 'Fehler beim Buchen');
+              }
+            } catch (error) {
+              alert('Fehler beim Senden des Buchungswunschs');
+              console.error(error);
+            }
+          }
+        },
+        events: async function (fetchInfo, successCallback, failureCallback) {
+          try {
+            const res = await fetch('/api/future-appointments');
+            const data = await res.json();
+            
+            console.log(data);  // Überprüfe, ob die Daten korrekt sind
+
+            // Hier konvertieren wir die Daten und überprüfen, ob sie ein gültiges Datumsformat haben
+            const events = data.map(appt => {
+              const startDate = new Date(appt.start);
+              const endDate = new Date(appt.end);
+              
+              // Überprüfe, ob die Daten korrekt sind
+              if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                console.error('Ungültiges Datum:', appt.start, appt.end);
+                return null;  // Ungültige Daten überspringen
+              }
+
+              return {
+                title: 'Gebucht',
+                start: startDate.toISOString(), // ISO-Format
+                end: endDate.toISOString()      // ISO-Format
+              };
+            }).filter(event => event !== null);  // Entferne ungültige Events
+
+            successCallback(events);  // Übergabe der Events an den Kalender
+          } catch (err) {
+            console.error(err);
+            failureCallback(err);
+          }
+        },
+        editable: false,
+        nowIndicator: true
+      });
+
+      calendar.render();
+    });
+  </script>
+</body>
+</html>
