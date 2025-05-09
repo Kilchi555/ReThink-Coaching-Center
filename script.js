@@ -1,20 +1,14 @@
 console.log("Script geladen");
 
-  document.addEventListener('DOMContentLoaded', function() {
-    // Alle FAQ-Fragen auswählen
-    const faqQuestions = document.querySelectorAll('.faq-question');
-  
-    // Für jede Frage einen Klick-EventListener hinzufügen
-    faqQuestions.forEach(function(question) {
-      question.addEventListener('click', function() {
-        // Die zugehörige Antwort finden
-        const answer = this.nextElementSibling;
-  
-        // Die Antwort ein- oder ausblenden
-        answer.classList.toggle('visible');
-      });
+document.querySelectorAll('.faq-question').forEach((btn) => {
+  btn.addEventListener('click', function () {
+    const clickedItem = this.closest('.faq-item');
+    document.querySelectorAll('.faq-item').forEach((item) => {
+      if (item !== clickedItem) item.classList.remove('active');
     });
+    clickedItem.classList.toggle('active');
   });
+});
   
 
     // --- Calendly Button in Hero Section ---
