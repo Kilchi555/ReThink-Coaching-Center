@@ -90,18 +90,26 @@
 
 @media (max-width: 768px) {
   .navbar {
-    display: none; /* Versteckt die Navigation standardmäßig */
     position: absolute;
     top: 100%;
     right: 0;
     background-color: #fff;
     width: 100%;
     text-align: center;
+  
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(-50px);
+    pointer-events: none;
+    transition: opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1), transform 2.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
-
+  
   .navbar.active {
-    display: block; /* Zeigt die Navigation, wenn sie aktiviert wird */
-  }
+    max-height: 500px;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }  
 
   .navbar ul {
     display: block;

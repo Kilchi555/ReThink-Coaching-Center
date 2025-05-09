@@ -1,34 +1,21 @@
-document.addEventListener('DOMContentLoaded', function () {
+console.log("Script geladen");
 
-    // --- FAQ Accordion ---
-    const faqItems = document.querySelectorAll('.faq-item');
-
-    faqItems.forEach(item => {
-        const questionButton = item.querySelector('.faq-question');
-        const answerDiv = item.querySelector('.faq-answer');
-
-        if (questionButton && answerDiv) {
-            questionButton.addEventListener('click', () => {
-                questionButton.classList.toggle('active');
-
-                if (answerDiv.style.display === 'block') {
-                    answerDiv.style.display = 'none';
-                } else {
-                    answerDiv.style.display = 'block';
-
-                    // Optional: andere schließen
-                    faqItems.forEach(otherItem => {
-                        if (otherItem !== item) {
-                            const otherAnswer = otherItem.querySelector('.faq-answer');
-                            const otherQuestion = otherItem.querySelector('.faq-question');
-                            if (otherAnswer) otherAnswer.style.display = 'none';
-                            if (otherQuestion) otherQuestion.classList.remove('active');
-                        }
-                    });
-                }
-            });
-        }
+  document.addEventListener('DOMContentLoaded', function() {
+    // Alle FAQ-Fragen auswählen
+    const faqQuestions = document.querySelectorAll('.faq-question');
+  
+    // Für jede Frage einen Klick-EventListener hinzufügen
+    faqQuestions.forEach(function(question) {
+      question.addEventListener('click', function() {
+        // Die zugehörige Antwort finden
+        const answer = this.nextElementSibling;
+  
+        // Die Antwort ein- oder ausblenden
+        answer.classList.toggle('visible');
+      });
     });
+  });
+  
 
     // --- Calendly Button in Hero Section ---
     const calendlyHeroButton = document.querySelector('.hero .calendly-button');
@@ -38,33 +25,25 @@ document.addEventListener('DOMContentLoaded', function () {
             Calendly.initPopupWidget({ url: calendlyUrl });
             return false;
         });
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-        const menuToggle = document.getElementById("menu-toggle");
-        const navbar = document.getElementById("navbar");
-      
-        menuToggle.addEventListener("click", function () {
-          navbar.classList.toggle("active");
-        });
+    };
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.getElementById('menu-toggle');
+      const navbar = document.getElementById('navbar');
+    
+      // Menü öffnen/schließen beim Klick auf das Burger-Menü
+      menuToggle.addEventListener('click', function(event) {
+        event.stopPropagation(); // verhindert sofortiges Schließen
+        navbar.classList.toggle('active');
+        menuToggle.classList.toggle('active');
       });
-      
-
-  // Accordion
-  const accordions = document.querySelectorAll(".accordion");
-
-  accordions.forEach((accordion) => {
-    accordion.addEventListener("click", function () {
-      // Toggle active class
-      this.classList.toggle("active");
-
-      // Toggle panel
-      const panel = this.nextElementSibling;
-      if (panel.style.maxHeight) {
-        panel.style.maxHeight = null;
-      } else {
-        panel.style.maxHeight = panel.scrollHeight + "px";
-      }
-    });
+    
+       // Menü mit Verzögerung schließen bei jedem Klick außerhalb
+  document.addEventListener('click', function() {
+    setTimeout(() => {
+      navbar.classList.remove('active');
+      menuToggle.classList.remove('active');
+    }, 200); // 200ms Verzögerung
   });
 });
+    
+    
