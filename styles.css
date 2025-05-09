@@ -22,6 +22,111 @@
     color: #333;
   }
 
+  /* ====== Container ====== */
+/* ====== Sticky Navbar ====== */
+.header {
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between; /* Stellt sicher, dass das Logo links und die Navbar rechts ist */
+  align-items: center;
+  padding: 0 20px; /* Optional, sorgt für Abstand auf beiden Seiten */
+}
+
+/* Der Container für das Logo */
+.header .container {
+  display: flex;
+  align-items: center; /* Vertikale Ausrichtung */
+  padding: 1.5rem;
+}
+
+.logo {
+  margin-left: 0; /* Entfernen von zusätzlichem Abstand */
+  height: 60px; /* Stell sicher, dass die Höhe proportional bleibt */
+}
+
+/* Navbar */
+.navbar {
+  display: flex; /* Zeigt die Links horizontal an */
+  justify-content: flex-end; /* Die Links nach rechts ausrichten */
+}
+
+.navbar ul {
+  list-style: none;
+  display: flex;
+  gap: 2rem; /* Abstand zwischen den Links */
+}
+
+.navbar a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  font-size: clamp(1rem, 1.5vw, 2rem);
+}
+
+.navbar a:hover {
+  color: #4892fa;
+}
+
+.navbar a:hover::after {
+  width: 100%;
+}
+
+/* ====== Mobile Menü Toggle ====== */
+.menu-toggle {
+  display: none;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  /* Das Menü ist standardmäßig ausgeblendet */
+  .navbar {
+    display: none; 
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    width: 100%;
+    text-align: center;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(-50px);
+    pointer-events: none;
+    transition: opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1), transform 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .navbar.active {
+    display: block; /* Zeigt das Menü an, wenn es aktiviert wird */
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+   }
+
+  .navbar ul {
+    display: block;
+    padding: 0;
+  }
+
+  .navbar li {
+    padding: 1rem 0;
+  }
+
+  .menu-toggle {
+    display: block; /* Zeigt den Button in der mobilen Ansicht an */
+  }
+
+  section {
+    scroll-margin-top: 80px; /* Die Höhe der Navbar */
+  }
+}
+
   /* ====== Hero Section ====== */
   .hero {
     background: linear-gradient(135deg, #e0f0ff, #ffffff);
@@ -257,7 +362,7 @@
 }
 
 .footer-section ul li {
-  margin: 8px 0;
+  margin: 20px 0;
 }
 
 .footer-section ul li a {
@@ -345,113 +450,8 @@
   border: none;
   border-radius: 30px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   font-size: clamp(1rem, 1vw, 1.5rem);
-  margin: 10px 0px;
-}
-
-/* ====== Container ====== */
-/* ====== Sticky Navbar ====== */
-.header {
-  background-color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  display: flex;
-  justify-content: space-between; /* Stellt sicher, dass das Logo links und die Navbar rechts ist */
-  align-items: center;
-  padding: 0 20px; /* Optional, sorgt für Abstand auf beiden Seiten */
-}
-
-/* Der Container für das Logo */
-.header .container {
-  display: flex;
-  align-items: center; /* Vertikale Ausrichtung */
-  padding: 1.5rem;
-}
-
-.logo {
-  margin-left: 0; /* Entfernen von zusätzlichem Abstand */
-  height: 60px; /* Stell sicher, dass die Höhe proportional bleibt */
-}
-
-/* Navbar */
-.navbar {
-  display: flex; /* Zeigt die Links horizontal an */
-  justify-content: flex-end; /* Die Links nach rechts ausrichten */
-}
-
-.navbar ul {
-  list-style: none;
-  display: flex;
-  gap: 2rem; /* Abstand zwischen den Links */
-}
-
-.navbar a {
-  text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  transition: color 0.3s ease;
-  font-size: clamp(1rem, 1.5vw, 2rem);
-}
-
-.navbar a:hover {
-  color: #4892fa;
-}
-
-.navbar a:hover::after {
-  width: 100%;
-}
-
-/* ====== Mobile Menü Toggle ====== */
-.menu-toggle {
-  display: none;
-  font-size: 2rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-@media (max-width: 768px) {
-  /* Das Menü ist standardmäßig ausgeblendet */
-  .navbar {
-    display: none; 
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: #fff;
-    width: 100%;
-    text-align: center;
-    opacity: 0;
-    overflow: hidden;
-    transform: translateY(-50px);
-    pointer-events: none;
-    transition: opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1), transform 2.5s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .navbar.active {
-    display: block; /* Zeigt das Menü an, wenn es aktiviert wird */
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-   }
-
-  .navbar ul {
-    display: block;
-    padding: 0;
-  }
-
-  .navbar li {
-    padding: 1rem 0;
-  }
-
-  .menu-toggle {
-    display: block; /* Zeigt den Button in der mobilen Ansicht an */
-  }
-
-  section {
-    scroll-margin-top: 80px; /* Die Höhe der Navbar */
-  }
+  margin-top: 10px
 }
