@@ -94,36 +94,47 @@ app.post('/api/register', async (req, res) => {
 
 // Handler fürs Login
 app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  console.log('>>> /api/login wurde aufgerufen!');
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'E-Mail und Passwort sind erforderlich.' });
-  }
-
-  try {
-    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    const user = userResult.rows[0];
-
-    if (!user) {
-      return res.status(401).json({ error: 'Ungültige Anmeldeinformationen.' });
+  
+    const { email, password } = req.body;
+  
+    console.log('>>> /api/login wurde aufgerufen!');
+    console.log('Request Body:', req.body); // Logge den Request-Body zur Überprüfung
+  
+    if (!email || !password) {
+      console.log('Fehler: E-Mail oder Passwort fehlt.');
+      return res.status(400).json({ error: 'E-Mail und Passwort sind erforderlich.' });
     }
-
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
-
-    if (passwordMatch) {
-      req.session.userId = user.id;
-      return res.status(200).json({ message: 'Login erfolgreich!', userId: user.id, email: user.email, role: user.role });
-    } else {
-      return res.status(401).json({ error: 'Ungültige Anmeldeinformationen.' });
+  
+    try {
+      console.log('Suche Benutzer in der Datenbank mit E-Mail:', email);
+      const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+      const user = userResult.rows[0];
+  
+      if (!user) {
+        console.log('Fehler: Benutzer nicht gefunden für E-Mail:', email);
+        return res.status(401).json({ error: 'Ungültige Anmeldeinformationen.' });
+      }
+  
+      console.log('Benutzer gefunden:', user);
+      console.log('Vergleiche Passwort mit Hash:', user.password_hash);
+      const passwordMatch = await bcrypt.compare(password, user.password_hash);
+      console.log('Passwort stimmt überein:', passwordMatch);
+  
+      if (passwordMatch) {
+        req.session.userId = user.id;
+        console.log('Login erfolgreich. Session-ID gesetzt für Benutzer-ID:', user.id);
+        console.log('Session-Inhalt nach Login:', req.session);
+        return res.status(200).json({ message: 'Login erfolgreich!', userId: user.id, email: user.email, role: user.role });
+      } else {
+        console.log('Fehler: Passwort stimmt nicht überein für Benutzer-ID:', user.id);
+        return res.status(401).json({ error: 'Ungültige Anmeldeinformationen.' });
+      }
+  
+    } catch (error) {
+      console.error('Fehler beim Login:', error);
+      return res.status(500).json({ error: 'Fehler beim Login.' });
     }
-
-  } catch (error) {
-    console.error('Fehler beim Login:', error);
-    return res.status(500).json({ error: 'Fehler beim Login.' });
-  }
-});
+  });
 
 // Handler für Benutzer-Daten
 app.get('/api/user', async (req, res) => {
@@ -137,6 +148,7 @@ app.get('/api/user', async (req, res) => {
         'SELECT id, email, created_at, role FROM users WHERE id = $1',
         [req.session.userId]
       );
+      console.log(Benutzer-ID);
       const user = userResult.rows[0];
 
       console.log('Benutzerdaten aus der Datenbank:', user); // Logge die abgerufenen Benutzerdaten
@@ -162,8 +174,10 @@ app.get('/', (req, res) => {
 
 // Handler für vergangene Termine
 // Beispiel-Endpoint zum Abrufen der Termine mit Notizen
+// Handler für vergangene Termine
 app.get('/api/past-appointments', async (req, res) => {
   console.log('>>> /api/past-appointments aufgerufen!');
+  console.log('Aktuelle Serverzeit:', new Date());
 
   if (!req.session.userId) {
     return res.status(401).json({ error: 'Nicht authentifiziert.' });
@@ -172,42 +186,44 @@ app.get('/api/past-appointments', async (req, res) => {
   const userId = req.session.userId;
 
   try {
-    // Wenn der Benutzer ein Mitarbeiter ist (also eine staff_id vorhanden ist), gebe ihm alle vergangenen Termine, bei denen er als Mitarbeiter eingetragen ist
     const result = await pool.query(`
-  SELECT 
-    a.id,
-    a.title,
-    a.start_time,
-    a.end_time,
-    u.email AS customer_email,
-    s.email AS staff_email,
-    cn.note AS client_note,
-    sn.note AS staff_note
-  FROM appointments a
-  LEFT JOIN users u ON u.id = a.user_id
-  LEFT JOIN users s ON s.id = a.staff_id
-  LEFT JOIN client_notes cn ON cn.appointment_id = a.id
-  LEFT JOIN staff_notes sn ON sn.appointment_id = a.id
-  WHERE a.start_time > NOW()
-    AND (a.user_id = $1 OR a.staff_id = $1)
-  ORDER BY a.start_time ASC
-`, [req.session.userId]);
+      SELECT
+        a.id,
+        a.title,
+        a.start_time,
+        a.end_time,
+        u.email AS customer_email,
+        s.email AS staff_email,
+        cn.note AS client_note,
+        sn.note AS staff_note
+      FROM appointments a
+      LEFT JOIN users u ON u.id = a.user_id
+      LEFT JOIN users s ON s.id = a.staff_id
+      LEFT JOIN client_notes cn ON cn.appointment_id = a.id
+      LEFT JOIN staff_notes sn ON sn.appointment_id = a.id
+      WHERE a.start_time < NOW()
+        AND (a.user_id = $1 OR a.staff_id = $1)
+      ORDER BY a.start_time ASC
+    `, [req.session.userId]);
+    console.log('Abgerufene Termine mit Startzeiten:', result.rows.map(row => row.start_time));
+    console.log('Rohdaten aus DB (past-appointments):', JSON.stringify(result.rows, null, 2));
 
-const events = result.rows.map(row => ({
-  id: row.id,
-  title: row.title || 'Termin',
-  start: new Date(row.start_time).toISOString(), // Hier sicherstellen, dass der Wert im richtigen Format ist
-  end: new Date(row.end_time).toISOString(),     // Hier ebenfalls
-  extendedProps: {
-    customerEmail: row.customer_email,
-    staffEmail: row.staff_email,
-    clientNote: row.client_note,
-    staffNote: row.staff_note,
-  }
-}));
+    const rawAppointments = result.rows;
 
-return res.status(200).json(events);
+    const calendarEvents = rawAppointments.map(row => ({
+      id: row.id,
+      title: row.title || 'Termin',
+      start: row.start_time,
+      end: row.end_time,
+      extendedProps: {
+        customerEmail: row.customer_email,
+        staffEmail: row.staff_email,
+        clientNote: row.client_note,
+        staffNote: row.staff_note,
+      }
+    }));
 
+    return res.status(200).json({ calendarEvents: calendarEvents, listData: rawAppointments });
 
   } catch (error) {
     console.error('Fehler beim Abrufen vergangener Termine:', error);
@@ -216,8 +232,10 @@ return res.status(200).json(events);
 });
 
 // Handler für zukünftige Termine
+// Handler für zukünftige Termine
 app.get('/api/future-appointments', async (req, res) => {
   console.log('>>> /api/future-appointments aufgerufen!');
+  console.log('Aktuelle Serverzeit:', new Date());
 
   if (!req.session.userId) {
     return res.status(401).json({ error: 'Nicht authentifiziert.' });
@@ -226,13 +244,13 @@ app.get('/api/future-appointments', async (req, res) => {
   const userId = req.session.userId;
 
   try {
-    // Wenn der Benutzer ein Mitarbeiter ist (also eine staff_id vorhanden ist), gebe ihm alle zukünftigen Termine, bei denen er als Mitarbeiter eingetragen ist
     const result = await pool.query(`
-  SELECT 
+    SELECT
     a.id,
     a.title,
     a.start_time,
     a.end_time,
+    a.location, -- Füge die Ortsspalte hinzu
     u.email AS customer_email,
     s.email AS staff_email,
     cn.note AS client_note,
@@ -242,33 +260,37 @@ app.get('/api/future-appointments', async (req, res) => {
   LEFT JOIN users s ON s.id = a.staff_id
   LEFT JOIN client_notes cn ON cn.appointment_id = a.id
   LEFT JOIN staff_notes sn ON sn.appointment_id = a.id
-  WHERE a.start_time > NOW()
+  WHERE a.start_time >= NOW() -- Korrigierte WHERE-Klausel für zukünftige Termine
     AND (a.user_id = $1 OR a.staff_id = $1)
   ORDER BY a.start_time ASC
-`, [req.session.userId]);
+    `, [req.session.userId]);
+    console.log('Abgerufene Termine mit Startzeiten:', result.rows.map(row => row.start_time));
+    console.log('Rohdaten aus DB (future-appointments):', JSON.stringify(result.rows, null, 2));
 
-const events = result.rows.map(row => ({
-  id: row.id,
-  title: row.title || 'Termin',
-  start: new Date(row.start_time).toISOString(), // Hier sicherstellen, dass der Wert im richtigen Format ist
-  end: new Date(row.end_time).toISOString(),     // Hier ebenfalls
-  extendedProps: {
-    customerEmail: row.customer_email,
-    staffEmail: row.staff_email,
-    clientNote: row.client_note,
-    staffNote: row.staff_note,
-  }
-}));
+    const rawAppointments = result.rows;
 
-return res.status(200).json(events);
+    const calendarEvents = rawAppointments.map(row => ({
+      id: row.id,
+      title: row.title || 'Termin',
+      start: row.start_time,
+      end: row.end_time,
+      extendedProps: {
+        customerEmail: row.customer_email,
+        staffEmail: row.staff_email,
+        clientNote: row.client_note,
+        staffNote: row.staff_note,
+        location: row.location // Füge den Ort hinzu
+      },
+      isPast: new Date(row.end_time) < new Date() // Beispielhafte Logik
+    }));
 
+    return res.status(200).json({ calendarEvents: calendarEvents, listData: rawAppointments });
 
   } catch (error) {
     console.error('Fehler beim Abrufen zukünftiger Termine:', error);
     return res.status(500).json({ error: 'Fehler beim Abrufen der zukünftigen Termine.' });
   }
 });
-
 
 
 // Handler für termingebundene Kunden-Notizen
@@ -408,6 +430,72 @@ app.post('/api/update-note', async (req, res) => {
   } catch (error) {
     console.error('Fehler beim Aktualisieren der Notiz:', error);
     return res.status(500).json({ error: 'Fehler beim Aktualisieren der Notiz.' });
+  }
+});
+
+// Handler zum Speichern/Aktualisieren der Kundennotiz für einen bestimmten Termin
+app.post('/api/appointment/:appointmentId/note', async (req, res) => {
+  const { appointmentId } = req.params;
+  const { clientNote } = req.body;
+  const userId = req.session.userId;
+
+  console.log(`>>> POST /api/appointment/${appointmentId}/note aufgerufen!`);
+  console.log('Request Body:', req.body);
+  console.log('Benutzer-ID aus Session:', userId);
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Nicht authentifiziert.' });
+  }
+
+  if (!clientNote) {
+    return res.status(400).json({ error: 'Die Notiz darf nicht leer sein.' });
+  }
+
+  try {
+    // Überprüfen, ob der Termin existiert und der angemeldete Benutzer der zugehörige Kunde ist
+    const appointmentCheck = await pool.query(
+      'SELECT id FROM appointments WHERE id = $1 AND user_id = $2',
+      [appointmentId, userId]
+    );
+
+    if (appointmentCheck.rows.length === 0) {
+      return res.status(403).json({ error: 'Sie sind nicht berechtigt, Notizen zu diesem Termin zu speichern.' });
+    }
+
+    // Überprüfen, ob bereits eine Kundennotiz für diesen Termin existiert
+    const existingNote = await pool.query(
+      'SELECT id FROM client_notes WHERE appointment_id = $1',
+      [appointmentId]
+    );
+
+    if (existingNote.rows.length > 0) {
+      // Aktualisiere die bestehende Notiz
+      const result = await pool.query(
+        'UPDATE client_notes SET note = $1 WHERE appointment_id = $2',
+        [clientNote, appointmentId]
+      );
+
+      if (result.rowCount > 0) {
+        return res.status(200).json({ message: 'Notiz erfolgreich aktualisiert.' });
+      } else {
+        return res.status(500).json({ error: 'Fehler beim Aktualisieren der Notiz.' });
+      }
+    } else {
+      // Füge eine neue Notiz hinzu
+      const result = await pool.query(
+        'INSERT INTO client_notes (appointment_id, note) VALUES ($1, $2)',
+        [appointmentId, clientNote]
+      );
+
+      if (result.rowCount > 0) {
+        return res.status(201).json({ message: 'Notiz erfolgreich gespeichert.' });
+      } else {
+        return res.status(500).json({ error: 'Fehler beim Speichern der Notiz.' });
+      }
+    }
+  } catch (error) {
+    console.error('Fehler beim Speichern/Aktualisieren der Kundennotiz:', error);
+    return res.status(500).json({ error: 'Fehler beim Speichern der Notiz.' });
   }
 });
 

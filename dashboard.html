@@ -4,575 +4,590 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard – Mental Coach</title>
-  <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="dashboard.css"/>
+  <link href='fullcalendar.css' rel='stylesheet' />
 </head>
 <body>
   <header class="header">
     <div class="container">
-      <a href="/"> <img src="images/ReThinkCoaching Logo.webp" alt="Mental Coach Logo" class="logo" height="50px" loading="lazy"/>
+      <a href="/"> <img src="images/ReThinkCoaching Logo.webp" alt="Mental Coach Logo" class="logo" size=100% loading="lazy"/>
       </a>
     </div>
-  <h1 id="dashboard-heading">Dashboard</h1>
-  <p id="user-email"></p>
-</header>
+    <div>
+      <h1 id="dashboard-heading">Dashboard</h1>
+      <p id="user-email"></p>
+    </div>
+  </header>
   <main>
-  <section id="admin-section" class="hidden dashboard-section">
-    <h2>Admin-Bereich</h2>
-    <div id="admin-loading" class="loading">
-      <div class="spinner"></div>
-      <span>Lade Admin-Daten...</span>
-    </div>
-    <p id="admin-statistics" class="hidden">Lade Admin-Daten...</p>
-  </section>
-  
-  <section id="employee-section" class="hidden dashboard-section">
-    <h2>Mitarbeiter-Bereich</h2>
-    <div id="employee-loading" class="loading">
-      <div class="spinner"></div>
-      <span>Lade Mitarbeiter-Daten...</span>
-    </div>
-    <p id="employee-statistics" class="hidden">Lade Mitarbeiter-Daten...</p>
-  </section>
-  
-  <section id="customer-section" class="hidden dashboard-section">
-    <h2>Kundenbereich</h2>
-    <div id="customer-appointments">
-      <h3>Ihre Termine</h3>
-      <div id="customer-loading" class="loading">
-        <div class="spinner"></div>
-        <span>Lade Ihre Termine...</span>
-      </div>
-      <p id="no-appointments-message" class="hidden">Lade Ihre Termine...</p>
-    </div>
-        <div id="customer-notes">
-          <h3>Ihre Notizen</h3>
-          <textarea id="customer-notes-input" class="note-textarea" placeholder="Geben Sie hier Ihre Notizen ein..."></textarea>
-          <button id="save-customer-note-button" class="save-note-button">Notiz speichern</button>
-          <p id="customer-notes-message" class="hidden"></p>
-        </div>
-  </section>
-  
 
-  <button id="logout-button">Logout</button>
+    <section id="admin-section" class="hidden dashboard-section">
+      <h2>Admin-Bereich</h2>
+      <div id="admin-loading" class="loading">
+        <div class="spinner"></div>
+        <span>Lade Admin-Daten...</span>
+      </div>
+      <p id="admin-statistics" class="hidden">Lade Admin-Daten...</p>
+    </section>
+
+    <section id="employee-section" class="hidden dashboard-section">
+      <h2>Mitarbeiter-Bereich</h2>
+      <div id="employee-loading" class="loading">
+        <div class="spinner"></div>
+        <span>Lade Mitarbeiter-Daten...</span>
+      </div>
+      <p id="employee-statistics" class="hidden">Lade Mitarbeiter-Daten...</p>
+    </section>
+
+    <section id="customer-section" class="hidden dashboard-section">
+      <h2>Kundenbereich</h2>
+      <button id="open-calendar-button" class="open-calendar-button">Termin reservieren</button>
+      <div id="calendar-modal" class="modal hidden">
+        <div class="modal-content">
+          <span id="close-calendar-modal" class="close-button">&times;</span>
+          <div id="modal-calendar"></div> <!- Hier wird der Kalender im Popup gerendert -->
+          <div id="calendar-day-headers-sticky" class="calendar-day-headers-sticky">
+          </div>
+        </div>
+      </div>
+      <div id="customer-appointments">
+        </div>
+        <p id="no-appointments-message" class="hidden"></p>
+      </div>
+      <div id="note-saved-message" class="hidden">Ihre Notiz wurde gespeichert.</div>
+    </section>
+
+    <div id="appointment-details-modal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h3>Termin Details</h3>
+        <p><strong>Titel:</strong> <span id="modal-title"></span></p>
+        <p><strong>Startzeit:</strong> <span id="modal-start-time"></span></p>
+        <p><strong>Endzeit:</strong> <span id="modal-end-time"></span></p>
+        <p><strong>Ort:</strong> <span id="modal-location"></span></p> <!- HIER HINZUGEFÜGT -->
+        <p><strong>Kunden E-Mail:</strong> <span id="modal-customer-email"></span></p>
+        <p><strong>Mitarbeiter E-Mail:</strong> <span id="modal-staff-email"></span></p>
+        <hr>
+        <h4>Notizen:</h4>
+        <p><strong>Ihre Notiz:</strong> <span id="modal-client-note"></span></p>
+        <p><strong>Notiz des Mitarbeiters:</strong> <span id="modal-staff-note"></span></p>
+      </div>
+    </div>
+
+    <button id="logout-button">Logout</button>
   </main>
 
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
   <script>
-   document.addEventListener('DOMContentLoaded', () => {
-  const role = localStorage.getItem('userRole');
-  const email = localStorage.getItem('userEmail');
+document.addEventListener('DOMContentLoaded', () => {
+    const role = localStorage.getItem('userRole');
+    const email = localStorage.getItem('userEmail');
 
-  if (!role) {
-    window.location.href = '/login.html';
-    return;
-  }
+    if (!role) {
+      window.location.href = '/login.html';
+      return;
+    }
 
-  document.getElementById('user-email').textContent = `Eingeloggt als: ${email}`;
+    document.getElementById('user-email').textContent = `Eingeloggt als: ${email}`;
 
-  if (role === 'admin') {
-    document.getElementById('admin-section').classList.remove('hidden');
-    fetchAdminStatistics();  // Lade Admin-Daten
-  } else if (role === 'mitarbeiter') {
-    document.getElementById('employee-section').classList.remove('hidden');
-    fetchEmployeeStatistics();  // Lade Mitarbeiter-Daten
-  } else if (role === 'kunde') {
-    document.getElementById('customer-section').classList.remove('hidden');
-    fetchCustomerAppointments();  // Lade Kundentermine
-        const notesInput = document.getElementById('customer-notes-input');
-        const saveNotesButton = document.getElementById('save-customer-note-button');
-        const notesMessage = document.getElementById('customer-notes-message');
+    if (role === 'admin') {
+      document.getElementById('admin-section').classList.remove('hidden');
+      fetchAdminStatistics();
+    } else if (role === 'mitarbeiter') {
+      document.getElementById('employee-section').classList.remove('hidden');
+      fetchEmployeeStatistics();
+    } else if (role === 'kunde') {
+      document.getElementById('customer-section').classList.remove('hidden');
+      fetchCustomerAppointments();
+    }
 
-        saveNotesButton.addEventListener('click', () => {
-            const noteText = notesInput.value.trim();
-            if (noteText === '') {
-                notesMessage.textContent = 'Bitte geben Sie eine Notiz ein.';
-                notesMessage.classList.remove('hidden');
-                notesMessage.classList.add('error-message');
-                return;
-            }
+    document.getElementById('logout-button').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+      localStorage.clear();
+      window.location.href = '/login.html';
+    });
 
-            notesMessage.textContent = 'Notiz wird gespeichert...';
-            notesMessage.classList.remove('hidden');
-            notesMessage.classList.remove('error-message');
+    // Event-Listener für den "Termin reservieren" Button
+    const openCalendarButton = document.getElementById('open-calendar-button');
+    const calendarModal = document.getElementById('calendar-modal');
 
-            fetch('/api/customer/notes', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ note: noteText }),
-                credentials: 'include',
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Fehler beim Speichern der Notiz');
+    if (openCalendarButton && calendarModal) {
+      openCalendarButton.addEventListener('click', () => {
+        console.log('Button "Termin reservieren" wurde geklickt.');
+        calendarModal.classList.remove('hidden');
+        // Wenn der Kalender noch nicht initialisiert wurde, initialisiere ihn hier beim ersten Klick
+        if (!calendarModal.dataset.calendarInitialized) {
+          const modalCalendarEl = document.getElementById('modal-calendar');
+          const stickyHeadersContainer = document.getElementById('calendar-day-headers-sticky'); // Stellen Sie sicher, dass dieses Element existiert
+
+          if (modalCalendarEl) {
+            const calendar = new FullCalendar.Calendar(modalCalendarEl, {
+              initialView: 'timeGridWeek',
+              locale: 'de',
+              timeZone: 'local',
+              events: [], // Hier könnten initial Termine geladen werden, falls nötig
+              height: 'auto',
+              headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'timeGridWeek,listWeek',
+              },
+              eventBackgroundColor: '#e0f7fa',
+              eventBorderColor: '#5a6a7c',
+              eventTextColor: '#2c3e50',
+              viewDidMount: (info) => {
+                const fcHeader = modalCalendarEl.querySelector('.fc-header-toolbar');
+                const calendarContent = modalCalendarEl.querySelector('.fc-view-harness');
+
+                if (fcHeader && calendarContent && stickyHeadersContainer) {
+                  const headerBottom = fcHeader.getBoundingClientRect().bottom;
+                  stickyHeadersContainer.style.top = `${headerBottom}px`;
+                  stickyHeadersContainer.style.left = `${calendarContent.getBoundingClientRect().left}px`;
+                  stickyHeadersContainer.style.width = `${calendarContent.getBoundingClientRect().width}px`;
+                  stickyHeadersContainer.style.position = 'absolute';
+                  stickyHeadersContainer.style.display = 'flex';
+                  stickyHeadersContainer.style.gap = '0';
                 }
-                return response.json();
-            })
-            .then(data => {
-                notesMessage.textContent = 'Notiz gespeichert!';
-                notesMessage.classList.remove('error-message');
-                notesMessage.classList.remove('hidden');
-                notesInput.value = '';
-                 setTimeout(() => {
-                    notesMessage.classList.add('hidden');
-                }, 2000);
-            })
-            .catch(error => {
-                console.error('Fehler beim Speichern der Notiz:', error);
-                notesMessage.textContent = 'Fehler beim Speichern der Notiz.';
-                notesMessage.classList.add('error-message');
-                notesMessage.classList.remove('hidden');
+              },
+              datesSet: (info) => {
+                if (stickyHeadersContainer) {
+                  stickyHeadersContainer.innerHTML = '';
+                  const fcDayHeaders = modalCalendarEl.querySelectorAll('.fc-col-header-cell');
+                  const firstDay = info.view.activeStart;
+                  const lastDay = info.view.activeEnd;
+                  let currentDate = new Date(firstDay);
+                  let headerIndex = 0;
+
+                  while (currentDate < lastDay) {
+                    const dayOfWeek = currentDate.toLocaleDateString('de-DE', { weekday: 'short' });
+                    const dayOfMonth = currentDate.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
+                    const headerItem = document.createElement('span');
+                    headerItem.classList.add('calendar-day-header-sticky-item');
+                    headerItem.textContent = `${dayOfWeek}, ${dayOfMonth}`;
+
+                    if (fcDayHeaders[headerIndex]) {
+                      headerItem.style.width = `${fcDayHeaders[headerIndex].offsetWidth}px`;
+                      headerItem.style.flexShrink = '0';
+                      headerItem.style.flexGrow = '0';
+                    }
+                    stickyHeadersContainer.appendChild(headerItem);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    headerIndex++;
+                  }
+                }
+              },
+              selectable: true,
+              select: function(info) {
+                alert('Ausgewählt: ' + info.startStr + ' bis ' + info.endStr);
+                // Hier kannst du Logik implementieren, um einen neuen Termin zu erstellen
+                calendar.unselect(); // Deselektiert die Auswahl
+              },
+              eventClick: function(info) {
+                const modal = document.getElementById('appointment-details-modal');
+                const modalTitle = document.getElementById('modal-title');
+                const modalStartTime = document.getElementById('modal-start-time');
+                const modalEndTime = document.getElementById('modal-end-time');
+                const modalLocation = document.getElementById('modal-location');
+                const modalCustomerEmail = document.getElementById('modal-customer-email');
+                const modalStaffEmail = document.getElementById('modal-staff-email');
+                const modalClientNote = document.getElementById('modal-client-note');
+                const modalStaffNote = document.getElementById('modal-staff-note');
+                const closeButton = document.querySelector('.close-button');
+
+                const appointment = info.event.extendedProps;
+                const startTime = info.event.start.toLocaleString('de-DE', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const endTime = info.event.end ? info.event.end.toLocaleString('de-DE', { hour: '2-digit', minute: '2-digit' }) : 'offen';
+
+                modalTitle.textContent = info.event.title;
+                modalStartTime.textContent = startTime;
+                modalEndTime.textContent = endTime;
+                modalLocation.textContent = appointment.location || 'kein Ort angegeben';
+                modalCustomerEmail.textContent = appointment.customerEmail || 'keine';
+                modalStaffEmail.textContent = appointment.staffEmail || 'keine';
+                modalClientNote.textContent = appointment.clientNote ? appointment.clientNote.replace(/<[^>]*>/g, '') || 'keine' : 'keine';
+                modalStaffNote.textContent = appointment.staffNote ? appointment.staffNote.replace(/<[^>]*>/g, '') || 'keine' : 'keine';
+
+                modal.style.display = 'block';
+
+                closeButton.addEventListener('click', () => {
+                  modal.style.display = 'none';
+                });
+
+                window.addEventListener('click', (event) => {
+                  if (event.target == modal) {
+                    modal.style.display = 'none';
+                  }
+                });
+              },
             });
-        });
-  }
+            calendar.render();
+            calendarModal.dataset.calendarInitialized = 'true'; // Markiere den Kalender als initialisiert
+          }
+        }
+      });
+    }
 
-  document.getElementById('logout-button').addEventListener('click', async () => {
-    await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-    localStorage.clear();
-    window.location.href = '/login.html';
+    const closeCalendarModalButton = document.getElementById('close-calendar-modal');
+    if (closeCalendarModalButton && calendarModal) {
+      closeCalendarModalButton.addEventListener('click', () => {
+        calendarModal.classList.add('hidden');
+      });
+
+      window.addEventListener('click', (event) => {
+        if (event.target == calendarModal) {
+          calendarModal.classList.add('hidden');
+        }
+      });
+    }
   });
-});
 
-async function fetchAdminStatistics() {
-  const loadingElement = document.getElementById('admin-loading');
-  const statisticsElement = document.getElementById('admin-statistics');
-  loadingElement.classList.remove('hidden');
-  statisticsElement.classList.add('hidden');
-  try {
-    const response = await fetch('/api/admin/statistics', { credentials: 'include' });
-    const data = await response.json();
-    document.getElementById('admin-statistics').textContent = `Gesamtzahl der Nutzer: ${data.totalUsers}`;
-  } catch (error) {
-    console.error('Fehler beim Abrufen der Admin-Daten:', error);
-    document.getElementById('admin-statistics').textContent = 'Fehler beim Laden der Admin-Daten.';
-  } finally {
-    loadingElement.classList.add('hidden');
-    statisticsElement.classList.remove('hidden');
+  async function fetchAdminStatistics() {
+    const loadingElement = document.getElementById('admin-loading');
+    const statisticsElement = document.getElementById('admin-statistics');
+    loadingElement.classList.remove('hidden');
+    statisticsElement.classList.add('hidden');
+    try {
+      const response = await fetch('/api/admin/statistics', { credentials: 'include' });
+      const data = await response.json();
+      document.getElementById('admin-statistics').textContent = `Gesamtzahl der Nutzer: ${data.totalUsers}`;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Admin-Daten:', error);
+      document.getElementById('admin-statistics').textContent = 'Fehler beim Laden der Admin-Daten.';
+    } finally {
+      loadingElement.classList.add('hidden');
+      statisticsElement.classList.remove('hidden');
+    }
   }
-}
 
-async function fetchEmployeeStatistics() {
-  const loadingElement = document.getElementById('employee-loading');
-  const statisticsElement = document.getElementById('employee-statistics');
-  loadingElement.classList.remove('hidden');
-  statisticsElement.classList.add('hidden');
-  try {
-    const response = await fetch('/api/employee/statistics', { credentials: 'include' });
-    const data = await response.json();
-    document.getElementById('employee-statistics').textContent = `Anzahl der erledigten Sitzungen: ${data.completedSessions}`;
-  } catch (error) {
-    console.error('Fehler beim Abrufen der Mitarbeiter-Daten:', error);
-    document.getElementById('employee-statistics').textContent = 'Fehler beim Laden der Mitarbeiter-Daten.';
-  } finally {
-    loadingElement.classList.add('hidden');
-    statisticsElement.classList.remove('hidden');
+  async function fetchEmployeeStatistics() {
+    const loadingElement = document.getElementById('employee-loading');
+    const statisticsElement = document.getElementById('employee-statistics');
+    loadingElement.classList.remove('hidden');
+    statisticsElement.classList.add('hidden');
+    try {
+      const response = await fetch('/api/employee/statistics', { credentials: 'include' });
+      const data = await response.json();
+      document.getElementById('employee-statistics').textContent = `Anzahl der erledigten Sitzungen: ${data.completedSessions}`;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Mitarbeiter-Daten:', error);
+      document.getElementById('employee-statistics').textContent = 'Fehler beim Laden der Mitarbeiter-Daten.';
+    } finally {
+      loadingElement.classList.add('hidden');
+      statisticsElement.classList.remove('hidden');
+    }
   }
-}
 
-async function fetchCustomerAppointments() {
-  const loadingElement = document.getElementById('customer-loading');
-  const appointmentsList = document.getElementById('customer-appointments');
-  const noAppointmentsMessage = document.getElementById('no-appointments-message');
-  loadingElement.classList.remove('hidden');
-  appointmentsList.classList.add('hidden');
-  noAppointmentsMessage.classList.add('hidden');
-  try {
-    const [pastResponse, futureResponse] = await Promise.all([
-      fetch('/api/past-appointments', { credentials: 'include' }),
-      fetch('/api/future-appointments', { credentials: 'include' })
-    ]);
+  async function fetchCustomerAppointments() {
+    const appointmentsContainer = document.getElementById('customer-appointments');
+    const calendarModal = document.getElementById('calendar-modal');
+    const modalCalendarEl = document.getElementById('modal-calendar'); // Kalender im Popup
+    const closeCalendarModalButton = document.getElementById('close-calendar-modal');
+    const stickyHeadersContainer = document.getElementById('calendar-day-headers-sticky');
+    const initialLoadingElement = document.getElementById('customer-loading');
+    const initialNoAppointmentsMessage = document.getElementById('no-appointments-message');
+    const role = localStorage.getItem('userRole');
 
-    if (!pastResponse.ok || !futureResponse.ok) {
-      throw new Error('Fehler beim Abrufen der Termine');
+    if (initialLoadingElement) {
+      initialLoadingElement.innerHTML = '<div class="spinner"></div><span>Lade Ihre Termine...</span>';
+      initialLoadingElement.classList.remove('hidden');
+    }
+    if (initialNoAppointmentsMessage) {
+      initialNoAppointmentsMessage.classList.add('hidden');
     }
 
-    const pastData = await pastResponse.json();
-    const futureData = await futureResponse.json();
+    try {
+      const [pastResponse, futureResponse] = await Promise.all([
+        fetch('/api/past-appointments', { credentials: 'include' }),
+        fetch('/api/future-appointments', { credentials: 'include' }),
+      ]);
 
-    appointmentsList.innerHTML = '';
+      if (!pastResponse.ok || !futureResponse.ok) {
+        throw new Error('Fehler beim Abrufen der Termine');
+      }
 
-    if (pastData && pastData.length > 0) {
-      const pastAppointmentsTitle = document.createElement('h3');
-      pastAppointmentsTitle.textContent = 'Vergangene Termine';
-      pastAppointmentsTitle.classList.add('appointment-title');
-      appointmentsList.appendChild(pastAppointmentsTitle);
+      const pastData = await pastResponse.json();
+      console.log('Daten vergangene Termine:', pastData);
 
-      pastData.forEach(appointment => {
-        const appointmentItem = document.createElement('p');
-        let startDate, endDate;
+      const futureData = await futureResponse.json();
+      console.log('Daten zukünftige Termine:', futureData);
 
-        try {
-          startDate = new Date(appointment.start_time);
-          endDate = new Date(appointment.end_time);
-        } catch (e) {
-          console.error('Fehler beim Erstellen von Datumsobjekten:', e, appointment);
-          startDate = new Date();
-          endDate = new Date();
+      appointmentsContainer.innerHTML = ''; // Leere den Container
+
+      const allPastAppointments = pastData?.listData || [];
+      const allFutureAppointments = futureData?.listData || [];
+      let allAppointments = [...allPastAppointments, ...allFutureAppointments];
+
+      // Sortiere alle Termine nach Startzeit
+      allAppointments.sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Setze die Uhrzeit auf 00:00:00 für den Vergleich
+
+      const todayAppointments = [];
+      const upcomingAppointments = [];
+      const pastAppointments = [];
+
+      allAppointments.forEach((appointment) => {
+        const startTime = new Date(appointment.start_time);
+        startTime.setHours(0, 0, 0, 0); // Setze die Uhrzeit ebenfalls auf 00:00:00 für den Vergleich
+
+        if (startTime.getTime() === today.getTime()) {
+          todayAppointments.push(appointment);
+        } else if (startTime > today) {
+          upcomingAppointments.push(appointment);
+        } else {
+          pastAppointments.push(appointment);
         }
-
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          console.error('Ungültiges Datum:', appointment.start_time, appointment.end_time);
-          startDate = new Date();
-          endDate = new Date();
-        }
-
-        const dateOptions = {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        };
-        const timeOptions = {
-          hour: '2-digit',
-          minute: '2-digit'
-        };
-        appointmentItem.textContent = `Termin am: ${startDate.toLocaleDateString('de-DE', dateOptions)} - ${endDate.toLocaleTimeString('de-DE', timeOptions)}`;
-        appointmentItem.classList.add('appointment-item');
-
-        // Anzeige der Notizen, falls vorhanden
-        if (appointment.extendedProps && appointment.extendedProps.clientNote) { // Überprüfe, ob extendedProps existiert
-            const noteElement = document.createElement('p');
-            noteElement.textContent = `Ihre Notiz: ${appointment.extendedProps.clientNote}`;
-            noteElement.classList.add('note-text');
-            appointmentItem.appendChild(noteElement);
-        }
-        appointmentsList.appendChild(appointmentItem);
       });
-    } else {
-      const noPastAppointmentsMessage = document.createElement('p');
-      noPastAppointmentsMessage.textContent = 'Keine vergangenen Termine.';
-      noPastAppointmentsMessage.classList.add('no-appointments-message');
-      appointmentsList.appendChild(noPastAppointmentsMessage);
+
+      // Sortiere vergangene Termine absteigend (kürzlich zurückliegende zuerst)
+      pastAppointments.sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
+
+      // Füge die sortierten Abschnitte zum Container hinzu
+      if (todayAppointments.length > 0) {
+        const todayDiv = document.createElement('div');
+        const todayTitle = document.createElement('h3');
+        todayTitle.textContent = 'Heutige Termine';
+        todayDiv.appendChild(todayTitle);
+        todayAppointments.forEach((appointment) => todayDiv.appendChild(createAppointmentItem(appointment, role)));
+        appointmentsContainer.appendChild(todayDiv);
+      }
+
+      if (upcomingAppointments.length > 0) {
+        const upcomingDiv = document.createElement('div');
+        const upcomingTitle = document.createElement('h3');
+        upcomingTitle.textContent = 'Zukünftige Termine';
+        upcomingDiv.appendChild(upcomingTitle);
+        upcomingAppointments.forEach((appointment) => upcomingDiv.appendChild(createAppointmentItem(appointment, role)));
+        appointmentsContainer.appendChild(upcomingDiv);
+      }
+
+      if (pastAppointments.length > 0) {
+        const pastDiv = document.createElement('div');
+        const pastTitle = document.createElement('h3');
+        pastTitle.textContent = 'Vergangene Termine';
+        pastDiv.appendChild(pastTitle);
+        pastAppointments.forEach((appointment) => pastDiv.appendChild(createAppointmentItem(appointment, role)));
+        appointmentsContainer.appendChild(pastDiv);
+      } else if (allAppointments.length === 0 && initialNoAppointmentsMessage) {
+        initialNoAppointmentsMessage.classList.remove('hidden');
+        initialNoAppointmentsMessage.textContent = 'Keine Termine gefunden.';
+      }
+
+      // FullCalendar Initialisierung im Modal (wird jetzt beim Button-Klick ausgelöst)
+      // Der Code hier wird entfernt, da die Initialisierung beim Button-Klick erfolgt.
+
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Kundentermine:', error);
+      appointmentsContainer.innerHTML = '';
+      const errorMsgElem = document.createElement('p');
+      errorMsgElem.id = 'no-appointments-message';
+      errorMsgElem.textContent = 'Fehler beim Laden Ihrer Termine.';
+      appointmentsContainer.appendChild(errorMsgElem);
+    } finally {
+      if (initialLoadingElement) {
+        initialLoadingElement.classList.add('hidden');
+      }
     }
-
-    if (futureData && futureData.length > 0) {
-      const futureAppointmentsTitle = document.createElement('h3');
-      futureAppointmentsTitle.textContent = 'Zukünftige Termine';
-      futureAppointmentsTitle.classList.add('appointment-title');
-      appointmentsList.appendChild(futureAppointmentsTitle);
-
-      futureData.forEach(appointment => {
-        const appointmentItem = document.createElement('p');
-        let startDate, endDate;
-
-        try {
-          startDate = new Date(appointment.start_time);
-          endDate = new Date(appointment.end_time);
-        } catch (e) {
-          console.error('Fehler beim Erstellen von Datumsobjekten:', e, appointment);
-          startDate = new Date();
-          endDate = new Date();
-        }
-
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          console.error('Ungültiges Datum:', appointment.start_time, appointment.end_time);
-          startDate = new Date();
-          endDate = new Date();
-        }
-
-        const dateOptions = {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        };
-        const timeOptions = {
-          hour: '2-digit',
-          minute: '2-digit'
-        };
-        appointmentItem.textContent = `Termin am: ${startDate.toLocaleDateString('de-DE', dateOptions)} - ${endDate.toLocaleTimeString('de-DE', timeOptions)}`;
-        appointmentItem.classList.add('appointment-item');
-        // Anzeige der Notizen, falls vorhanden
-        if (appointment.extendedProps && appointment.extendedProps.clientNote) {  // Überprüfe, ob extendedProps existiert
-            const noteElement = document.createElement('p');
-            noteElement.textContent = `Ihre Notiz: ${appointment.extendedProps.clientNote}`;
-            noteElement.classList.add('note-text');
-            appointmentItem.appendChild(noteElement);
-        }
-        appointmentsList.appendChild(appointmentItem);
-      });
-    } else {
-      const noFutureAppointmentsMessage = document.createElement('p');
-      noFutureAppointmentsMessage.textContent = 'Keine zukünftigen Termine.';
-      noFutureAppointmentsMessage.classList.add('no-appointments-message');
-      appointmentsList.appendChild(noFutureAppointmentsMessage);
-    }
-  } catch (error) {
-    console.error('Fehler beim Abrufen der Kundentermine:', error);
-    document.getElementById('no-appointments-message').textContent = 'Fehler beim Laden Ihrer Termine.';
-  } finally {
-    loadingElement.classList.add('hidden');
-    appointmentsList.classList.remove('hidden');
-    noAppointmentsMessage.classList.remove('hidden');
   }
-}
 
+
+  async function saveNote(appointmentId, type, editorId, displayElement, editButton) {
+    const noteType = type === 'client' ? 'clientNote' : 'employeeNote';
+    const noteContent = document.getElementById(editorId).innerHTML;
+    const editorElement = document.getElementById(editorId);
+
+    try {
+      const response = await fetch(`/api/appointment/${appointmentId}/note`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ [noteType]: noteContent }), // Sende den HTML-Inhalt
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Fehler beim Speichern der ${type} Notiz: ${response.status} ${errorText}`);
+      }
+      displayElement.innerHTML = noteContent || 'Keine Notiz vorhanden.';
+      editorElement.classList.add('hidden'); // Verstecke den Editor
+      displayElement.classList.remove('hidden'); // Zeige die formatierte Notiz
+
+      const savedMessageElement = document.getElementById('note-saved-message');
+      savedMessageElement.classList.add('show'); // Füge die Klasse "show" hinzu
+      setTimeout(() => {
+        savedMessageElement.classList.remove('show'); // Entferne die Klasse nach 3 Sekunden
+      }, 3000);
+
+    } catch (error) {
+      console.error(`Fehler beim Speichern der ${type} Notiz:`, error);
+      alert(`Fehler beim Speichern Ihrer ${type} Notiz. Bitte versuchen Sie es erneut. Details: ${error.message}`);
+    }
+  }
+
+  function formatText(command, elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+      document.execCommand(command, false, null);
+    }
+  }
+
+  function toggleEditMode(editorId, displayElement, editButton, initialNote) {
+    const editorElement = document.getElementById(editorId);
+    editorElement.innerHTML = initialNote ? initialNote.replace(/<br>/g, '\n') : ''; // Fülle den Editor mit dem aktuellen Inhalt
+    editorElement.classList.remove('hidden'); // Zeige den Editor
+    displayElement.classList.add('hidden'); // Verstecke die formatierte Notiz
+    editButton.textContent = 'Notiz speichern';
+
+    // Entferne den vorherigen Event-Listener (falls vorhanden)
+    editButton.removeEventListener('click', handleEditButtonClick);
+
+    // Füge den Speichern-Handler hinzu
+    editButton.addEventListener('click', handleSaveButtonClick);
+  }
+
+  function handleEditButtonClick() {
+    const appointmentId = this.closest('.appointment-item').dataset.appointmentId;
+    const editorId = `client-note-editor-${appointmentId}`;
+    const displayElementId = `client-note-display-${appointmentId}`;
+    const displayElement = document.getElementById(displayElementId);
+    const editButton = this;
+    const initialNote = displayElement ? displayElement.innerHTML.replace(/<br>/g, '\n') : '';
+    toggleEditMode(editorId, displayElement, editButton, initialNote);
+  }
+
+  function handleSaveButtonClick(event) {
+    event.stopPropagation();
+    const editButton = this;
+    const appointmentId = editButton.closest('.appointment-item').dataset.appointmentId;
+    const editorId = `client-note-editor-${appointmentId}`;
+    const displayElementId = `client-note-display-${appointmentId}`;
+    const displayElement = document.getElementById(displayElementId);
+    saveNote(appointmentId, 'client', editorId, displayElement, editButton);
+
+    // Nach dem Speichern wieder zum Bearbeiten-Modus wechseln
+    editButton.textContent = 'Notiz bearbeiten';
+    editButton.removeEventListener('click', handleSaveButtonClick);
+    editButton.addEventListener('click', handleEditButtonClick);
+    document.getElementById(editorId).classList.add('hidden');
+    document.getElementById(displayElementId).classList.remove('hidden');
+  }
+
+  function createAppointmentItem(appointment, role) {
+  const appointmentItem = document.createElement('div');
+  appointmentItem.classList.add('appointment-item');
+  appointmentItem.dataset.appointmentId = appointment.id;
+
+  let startDate, endDate;
+  let clientNote = appointment.extendedProps?.clientNote;
+  let employeeNote = appointment.extendedProps?.employeeNote;
+
+  try {
+    startDate = new Date(appointment.start_time); // Verwende appointment.start_time
+    endDate = new Date(appointment.end_time);   // Verwende appointment.end_time
+  } catch (e) {
+    console.error('Fehler beim Erstellen von Datumsobjekten:', e, appointment);
+    startDate = new Date();
+    endDate = new Date();
+  }
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    console.error('Ungültiges Datum:', appointment.start_time, appointment.end_time); // Logge die korrekten Eigenschaften
+    startDate = new Date();
+    endDate = new Date();
+  }
+
+  const dateOptions = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+  const timeOptions = { hour: '2-digit', minute: '2-digit' };
+
+  const appointmentHeader = document.createElement('div');
+  appointmentHeader.classList.add('appointment-header');
+  appointmentHeader.textContent = `${startDate.toLocaleDateString('de-DE', dateOptions)} - ${endDate.toLocaleTimeString('de-DE', timeOptions)}`;
+  appointmentItem.appendChild(appointmentHeader);
+
+  const toggleButton = document.createElement('button');
+  toggleButton.classList.add('toggle-notes-button');
+  toggleButton.textContent = 'Notizen anzeigen';
+  appointmentItem.appendChild(toggleButton);
+
+  const notesSection = document.createElement('div');
+  notesSection.classList.add('notes-section');
+
+  const clientNotesDiv = document.createElement('div');
+  clientNotesDiv.classList.add('note-container');
+  const clientNoteTitle = document.createElement('h4');
+  clientNoteTitle.textContent = 'Ihre Notiz';
+  clientNotesDiv.appendChild(clientNoteTitle);
+
+  const formattingDiv = document.createElement('div');
+  formattingDiv.classList.add('note-formatting-buttons');
+
+  const clientNoteEditor = document.createElement('div');
+  clientNoteEditor.id = `client-note-editor-${appointment.id}`;
+  clientNoteEditor.classList.add('note-editor', 'hidden'); // Anfangs versteckt
+  clientNoteEditor.contentEditable = true;
+  clientNoteEditor.innerHTML = clientNote ? clientNote.replace(/<br>/g, '\n') : '';
+  clientNotesDiv.appendChild(clientNoteEditor);
+
+  const boldButton = document.createElement('button');
+  boldButton.textContent = 'B';
+  boldButton.classList.add('bold');
+  boldButton.addEventListener('click', () => formatText('bold', `client-note-editor-${appointment.id}`));
+  formattingDiv.appendChild(boldButton);
+
+  const italicButton = document.createElement('button');
+  italicButton.textContent = 'I';
+  italicButton.classList.add('italic');
+  italicButton.addEventListener('click', () => formatText('italic', `client-note-editor-${appointment.id}`));
+  formattingDiv.appendChild(italicButton);
+
+  const underlineButton = document.createElement('button');
+  underlineButton.textContent = 'U';
+  underlineButton.classList.add('underline');
+  underlineButton.addEventListener('click', () => formatText('underline', `client-note-editor-${appointment.id}`));
+  formattingDiv.appendChild(underlineButton);
+
+  clientNotesDiv.appendChild(formattingDiv);
+
+  const clientNoteDisplay = document.createElement('div');
+  clientNoteDisplay.id = `client-note-display-${appointment.id}`;
+  clientNoteDisplay.classList.add('note-text');
+  clientNoteDisplay.innerHTML = clientNote || 'Keine Notiz vorhanden.';
+  clientNotesDiv.appendChild(clientNoteDisplay);
+
+  const employeeNotesDiv = document.createElement('div'); // HIER deklariert und initialisiert
+  employeeNotesDiv.classList.add('note-container');
+  const employeeNoteTitle = document.createElement('h4');
+  employeeNoteTitle.textContent = 'Notiz des Mitarbeiters';
+  employeeNotesDiv.appendChild(employeeNoteTitle);
+  const employeeNoteDisplay = document.createElement('div');
+  employeeNoteDisplay.classList.add('note-text');
+  employeeNoteDisplay.innerHTML = employeeNote || 'Keine Notiz vorhanden.';
+  employeeNotesDiv.appendChild(employeeNoteDisplay);
+
+  if (role === 'kunde') {
+    const editClientNoteButton = document.createElement('button');
+    editClientNoteButton.textContent = clientNote ? 'Notiz bearbeiten' : 'Notiz hinzufügen';
+    editClientNoteButton.classList.add('edit-note-button');
+    editClientNoteButton.addEventListener('click', handleEditButtonClick.bind(editClientNoteButton)); // Bind this
+    clientNotesDiv.appendChild(editClientNoteButton);
+  }
+  notesSection.appendChild(clientNotesDiv);
+  notesSection.appendChild(employeeNotesDiv);
+  appointmentItem.appendChild(notesSection);
+
+  toggleButton.addEventListener('click', () => {
+    appointmentItem.classList.toggle('expanded');
+    if (appointmentItem.classList.contains('expanded')) {
+      toggleButton.textContent = 'Notizen ausblenden';
+    } else {
+      toggleButton.textContent = 'Notizen anzeigen';
+    }
+  });
+
+  return appointmentItem;
+}
   </script>
-
-  <style>
-    /* Grundlegende Reset-Styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Arial', sans-serif;
-}
-
-body {
-  background-color: #f9f9f9;
-  font-size: 16px;
-  line-height: 1.6;
-  color: #333;
-  padding: 0;
-  margin-top: 60px; /* Platz für den Header */
-}
-
-header {
-  background-color: #34495e;
-  color: white;
-  padding: 1rem 2rem;
-  text-align: center;
-  border-radius: 0;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 100;
-}
-
-header .container{
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-header h1 {
-  font-size: 2rem;
-  margin-bottom: 0;
-}
-
-header .logo {
-  max-width: 100px;
-  margin-right: 1rem;
-}
-
-header p{
-  font-size: 0.9rem;
-  color: #eee;
-}
-
-
-h2, h3 {
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  color: #2c3e50;
-  text-align: center;
-}
-
-
-p {
-  font-size: 1rem;
-  color: #555;
-  margin-bottom: 1rem;
-}
-
-.hidden {
-  display: none;
-}
-
-/* Bereich für die Sektionen (Admin, Mitarbeiter, Kunde) */
-section {
-  margin-bottom: 2rem;
-}
-
-.dashboard-section{
-  background-color: #fff;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  margin-bottom: 2rem;
-}
-
-
-#customer-appointments {
-  background-color: #ffffff;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  margin-top: 1rem;
-}
-
-#customer-appointments h3 {
-  margin-bottom: 1.5rem;
-  color: #2c3e50;
-  text-align: left;
-}
-
-/* Kunden-Termine */
-#customer-appointments p {
-  background-color: #ecf0f1;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  border: 1px solid #d3d3d3;
-}
-
-#no-appointments-message {
-  color: #e74c3c;
-  font-size: 1rem;
-  font-style: italic;
-  padding: 1rem;
-  background-color: #f8f0f0;
-  border-radius: 0.5rem;
-  border: 1px solid #e74c3c;
-  margin-top: 1rem;
-}
-
-/* Logout Button */
-#logout-button {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background-color: #e74c3c;
-  color: white;
-  font-size: 1rem;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  margin-top: 2rem;
-  align-self: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-#logout-button:hover {
-  background-color: #c0392b;
-  transform: scale(1.05);
-}
-
-#logout-button:active {
-  transform: scale(1);
-}
-
-/* Styling für Notizen */
-.note-textarea {
-  width: 100%;
-  height: 80px;
-  padding: 1rem;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 0.375rem;
-  margin-top: 1rem;
-  resize: vertical;
-}
-
-.save-note-button {
-  background-color: #3498db;
-  color: white;
-  padding: 0.75rem 1.2rem;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  margin-top: 1rem;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.save-note-button:hover {
-  background-color: #217dbb;
-  transform: scale(1.05);
-}
-
-.save-note-button:active {
-  transform: scale(1);
-}
-
-/* Styling der Listen für Termine */
-li {
-  background-color: #f0f0f0;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #d3d3d3;
-}
-
-li strong {
-  font-weight: bold;
-  color: #2c3e50;
-}
-.note-text{
-  font-size: 0.9rem;
-  font-style: italic;
-  color: #7f8c8d;
-  margin-top: 0.5rem;
-}
-
-/* Responsive Styles */
-@media (max-width: 768px) {
-  body {
-    padding-top: 50px;
-  }
-  header {
-    padding: 0.5rem;
-  }
-  header .container {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  header .logo{
-    margin-bottom: 0.5rem;
-  }
-  header h1 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-  }
-  main {
-    padding: 1rem;
-  }
-  section {
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-  #customer-appointments{
-    padding: 1.5rem;
-  }
-  #logout-button {
-    margin-top: 1rem;
-    align-self: center;
-  }
-}
-
-/* Spinner Animation */
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.spinner {
-  border-radius: 50%;
-  width: 2rem;
-  height: 2rem;
-  border: 0.25rem solid rgba(125, 211, 252, 0.3);
-  border-top-color: #7dd3fc;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-  </style>
 </body>
 </html>
