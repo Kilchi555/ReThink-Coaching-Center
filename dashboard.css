@@ -462,7 +462,7 @@
   }
 
   /* Stil für den "Termine buchen"-Button */
-.book-appointment-button {
+.open-calendar-button {
   display: inline-block;
   padding: 0.5rem 1rem;
   background-color: #28a745; /* Ein schöner Grünton für "buchen" */
@@ -477,46 +477,13 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.book-appointment-button:hover {
+.open-calendar-button:hover {
   background-color: #1e7e34; /* Dunklerer Grünton bei Hover */
   transform: scale(1.05);
 }
 
-.book-appointment-button:active {
+.open-calendar-button:active {
   transform: scale(1);
-}
-
-.fc-close-button {
-  cursor: pointer;
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  font-size: 3rem;
-  line-height: 1;
-  opacity: 0.5;
-  transition: opacity 0.2s ease;
-}
-
-.fc-close-button:hover {
-  opacity: 1;
-}
-
-.fc-header-toolbar {
-  position: relative; /* Damit der close-Button relativ zum Toolbar positioniert werden kann */
-}
-
-.close-button {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.close-button:hover,
-.close-button:focus {
-  color: black;
-  text-decoration: none;
-  cursor: pointer;
 }
 
 #appointment-details-modal h3 {
@@ -543,90 +510,132 @@
   text-align: left;
 }
 
-.calendar-day-headers-sticky {
-  background-color: #f9f9f9;
-  padding: 0.5rem 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  position: absolute;
-  top: 0; /* Wird im JS dynamisch gesetzt */
-  left: 0; /* Wird im JS dynamisch gesetzt */
-  width: 100%; /* Wird im JS dynamisch gesetzt */
-  z-index: 99;
-  display: flex; /* Diese Zeile ist entscheidend für die horizontale Anordnung */
-  gap: 0; /* Kein direkter Abstand zwischen den Elementen mehr */
-  align-items: center;
-  overflow-x: auto;
-}
 
-.calendar-day-header-sticky-item {
-  font-weight: bold;
-  color: #555;
-  white-space: nowrap; /* Verhindert Umbruch */
-}
-
-@media (max-width: 768px) {
-  .calendar-day-headers-sticky {
-    top: 50px; /* Angepasst für kleinere Bildschirme (unterhalb des kleineren Headers) */
-    padding: 0.5rem;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-  }
-}
-
-.calendar-day-header-sticky-item {
-  font-weight: bold;
-  color: #555;
-  white-space: nowrap; /* Verhindert Umbruch */
-  border-right: 1px solid #ccc; /* Fügt eine dünne graue Linie rechts hinzu */
-  padding-right: 0.5rem; /* Optional: etwas Abstand rechts vom Text */
-  padding-left: 0.5rem;  /* Optional: etwas Abstand links vom Text */
-}
-
-.calendar-day-header-sticky-item:last-child {
-  border-right: none; /* Entfernt den rechten Rahmen beim letzten Element */
-}
-
-.fc-col-header-cell { /* Ersetze dies durch die tatsächliche Klasse */
-  display: none !important;
-}
-
+/* Modal (Popup) Styles - Überarbeitet */
 .modal {
-  display: none; /* Standardmäßig ausgeblendet */
-  position: fixed;
-  z-index: 1;
+  position: fixed; /* Bleibt an Ort und Stelle */
+  z-index: 1000; /* Hohe Z-Index, um über allem zu liegen */
   left: 0;
   top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0,0,0,0.4);
+  width: 100%; /* Volle Breite */
+  height: 100%; /* Volle Höhe */
+  overflow: auto; /* Aktiviert Scrollen bei Bedarf */
+  background-color: rgba(0, 0, 0, 0.4); /* Schwarzer Hintergrund mit Transparenz */
 }
 
 .modal-content {
   background-color: #fefefe;
-  position: fixed; /* Wichtig für die Positionierung relativ zum Viewport */
-  top: 10%;
-  left: 10%;
-  width: 80%;
-  height: 80%;
-  margin: 0; /* Entferne das automatische Margin */
-  padding: 20px;
-  border: 1px solid #888;
   border-radius: 0.5rem;
-  z-index: 1002; /* Stelle sicher, dass es über dem Modal-Overlay liegt */
+  width: 100%; /* Kann je nach Bedarf angepasst werden */
+  height: 100%; /* Maximale Höhe, um Scrollen im Modal zu ermöglichen */
+  overflow: auto; /* Scrollen innerhalb des Modal-Contents */
+  position: relative; /* Für die Positionierung des Close-Buttons */
+  padding: 3%;
 }
 
 .close-button {
+  position: fixed; /* Wichtig für die Positionierung innerhalb des relative Elternteils */
+  top: 1rem;      /* Etwas Abstand vom oberen Rand des Toolbars */
+  right: 1rem;    /* Am rechten Rand positionieren */
   color: #aaa;
-  float: right;
-  font-size: 28px;
+  font-size: 2.5rem;   /* Etwas kleinere Schriftgröße für bessere Integration */
   font-weight: bold;
+  cursor: pointer;
+  line-height: 1;   /* Wichtig für die vertikale Ausrichtung */
+  padding: 0;       /* Entferne Standard-Padding */
+  margin: 0;        /* Entferne Standard-Margin */
+  z-index: 101;      /* Stelle sicher, dass er über anderen Elementen liegt */
 }
 
 .close-button:hover,
 .close-button:focus {
   color: black;
   text-decoration: none;
-  cursor: pointer;
+}
+
+/* FullCalendar Container im Modal */
+#modal-calendar {
+  padding: 10px; /* Etwas Innenabstand für den Kalender */
+  min-height: 400px; /* Mindesthöhe, um sicherzustellen, dass der Kalender Platz hat */
+}
+
+/* Sticky Header für den Kalender */
+.calendar-day-headers-sticky {
+  background-color: #f9f9f9;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  position: sticky; /* Sticky Positionierung */
+  height: 70px;
+  top: 0;
+  width: 100%;
+  z-index: 99;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  overflow-x: auto;
+  justify-content: space-around; /* Füge diese Zeile hinzu */ 
+  border: none;
+
+}
+
+.calendar-day-header-sticky-item {
+  left: 150px;
+  font-weight: bold;
+  color: #555;
+  white-space: nowrap;
+  display: grid; /* Nutze Grid auch für die Items, um die Zeilen zu steuern */
+  grid-template-rows: auto auto; /* Zwei Zeilen: eine für den Wochentag, eine für den Tag */
+  padding: 0.5rem 0; /* Vertikales Padding für etwas Abstand */
+  border: none;
+}
+
+.weekday {
+  font-weight: bold;
+  /* Weitere Stile für den Wochentag */
+  grid-row: 1;
+ 
+  text-align: center; /* Text horizontal zentrieren */
+}
+
+.month-day {
+  font-size: 0.8em;
+  color: #777;
+  /* Weitere Stile für den Tag */
+  grid-row: 2;
+  
+  text-align: center; /* Text horizontal zentrieren */
+}
+
+/* Ausblenden der Standard-Kalender-Header */
+.fc-col-header-cell {
+  display: none !important;
+}
+
+#modal-calendar {
+  width: 100%;
+  height: 400px;
+}
+
+.fc-toolbar { /* Beispiel für einen FullCalendar-spezifischen Container */
+  padding: 0.5rem;
+}
+
+.fc-header-toolbar.fc-toolbar {
+  position: absolute; /* Oder fixed, je nach gewünschtem Verhalten */
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: inherit; /* Damit der Hintergrund passt */
+  z-index: 100; /* Über dem Kalenderinhalt */
+  border-bottom: none !important; /* Entferne den unteren Rahmen */
+  height: 200px;
+}
+
+.fc-view-harness {
+  padding-top: 140px !important; /* Platz für den fixierten Header (Höhe anpassen!) */
+}
+
+.calendar-day-headers-sticky {
+  padding-left: 50px; /* Passe diesen Wert an die ungefähre Breite deiner Uhrzeitspalte an */
 }

@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard – Mental Coach</title>
-  <link rel="stylesheet" href="dashboard.css"/>
   <link href='fullcalendar.css' rel='stylesheet' />
+  <link rel="stylesheet" href="dashboard.css"/>
 </head>
 <body>
   <header class="header">
@@ -46,12 +46,12 @@
           <span id="close-calendar-modal" class="close-button">&times;</span>
           <div id="modal-calendar"></div> <!- Hier wird der Kalender im Popup gerendert -->
           <div id="calendar-day-headers-sticky" class="calendar-day-headers-sticky">
-          </div>
+            </div>
         </div>
       </div>
       <div id="customer-appointments">
-        </div>
-        <p id="no-appointments-message" class="hidden"></p>
+      </div>
+      <p id="no-appointments-message" class="hidden"></p>
       </div>
       <div id="note-saved-message" class="hidden">Ihre Notiz wurde gespeichert.</div>
     </section>
@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (role === 'kunde') {
       document.getElementById('customer-section').classList.remove('hidden');
       fetchCustomerAppointments();
+       // Rufe die Funktion zum Initialisieren des Kalenders auf
     }
 
     document.getElementById('logout-button').addEventListener('click', async () => {
@@ -109,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event-Listener für den "Termin reservieren" Button
     const openCalendarButton = document.getElementById('open-calendar-button');
     const calendarModal = document.getElementById('calendar-modal');
+    
 
     if (openCalendarButton && calendarModal) {
       openCalendarButton.addEventListener('click', () => {
@@ -116,112 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
         calendarModal.classList.remove('hidden');
         // Wenn der Kalender noch nicht initialisiert wurde, initialisiere ihn hier beim ersten Klick
         if (!calendarModal.dataset.calendarInitialized) {
-          const modalCalendarEl = document.getElementById('modal-calendar');
-          const stickyHeadersContainer = document.getElementById('calendar-day-headers-sticky'); // Stellen Sie sicher, dass dieses Element existiert
-
-          if (modalCalendarEl) {
-            const calendar = new FullCalendar.Calendar(modalCalendarEl, {
-              initialView: 'timeGridWeek',
-              locale: 'de',
-              timeZone: 'local',
-              events: [], // Hier könnten initial Termine geladen werden, falls nötig
-              height: 'auto',
-              headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'timeGridWeek,listWeek',
-              },
-              eventBackgroundColor: '#e0f7fa',
-              eventBorderColor: '#5a6a7c',
-              eventTextColor: '#2c3e50',
-              viewDidMount: (info) => {
-                const fcHeader = modalCalendarEl.querySelector('.fc-header-toolbar');
-                const calendarContent = modalCalendarEl.querySelector('.fc-view-harness');
-
-                if (fcHeader && calendarContent && stickyHeadersContainer) {
-                  const headerBottom = fcHeader.getBoundingClientRect().bottom;
-                  stickyHeadersContainer.style.top = `${headerBottom}px`;
-                  stickyHeadersContainer.style.left = `${calendarContent.getBoundingClientRect().left}px`;
-                  stickyHeadersContainer.style.width = `${calendarContent.getBoundingClientRect().width}px`;
-                  stickyHeadersContainer.style.position = 'absolute';
-                  stickyHeadersContainer.style.display = 'flex';
-                  stickyHeadersContainer.style.gap = '0';
-                }
-              },
-              datesSet: (info) => {
-                if (stickyHeadersContainer) {
-                  stickyHeadersContainer.innerHTML = '';
-                  const fcDayHeaders = modalCalendarEl.querySelectorAll('.fc-col-header-cell');
-                  const firstDay = info.view.activeStart;
-                  const lastDay = info.view.activeEnd;
-                  let currentDate = new Date(firstDay);
-                  let headerIndex = 0;
-
-                  while (currentDate < lastDay) {
-                    const dayOfWeek = currentDate.toLocaleDateString('de-DE', { weekday: 'short' });
-                    const dayOfMonth = currentDate.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
-                    const headerItem = document.createElement('span');
-                    headerItem.classList.add('calendar-day-header-sticky-item');
-                    headerItem.textContent = `${dayOfWeek}, ${dayOfMonth}`;
-
-                    if (fcDayHeaders[headerIndex]) {
-                      headerItem.style.width = `${fcDayHeaders[headerIndex].offsetWidth}px`;
-                      headerItem.style.flexShrink = '0';
-                      headerItem.style.flexGrow = '0';
-                    }
-                    stickyHeadersContainer.appendChild(headerItem);
-                    currentDate.setDate(currentDate.getDate() + 1);
-                    headerIndex++;
-                  }
-                }
-              },
-              selectable: true,
-              select: function(info) {
-                alert('Ausgewählt: ' + info.startStr + ' bis ' + info.endStr);
-                // Hier kannst du Logik implementieren, um einen neuen Termin zu erstellen
-                calendar.unselect(); // Deselektiert die Auswahl
-              },
-              eventClick: function(info) {
-                const modal = document.getElementById('appointment-details-modal');
-                const modalTitle = document.getElementById('modal-title');
-                const modalStartTime = document.getElementById('modal-start-time');
-                const modalEndTime = document.getElementById('modal-end-time');
-                const modalLocation = document.getElementById('modal-location');
-                const modalCustomerEmail = document.getElementById('modal-customer-email');
-                const modalStaffEmail = document.getElementById('modal-staff-email');
-                const modalClientNote = document.getElementById('modal-client-note');
-                const modalStaffNote = document.getElementById('modal-staff-note');
-                const closeButton = document.querySelector('.close-button');
-
-                const appointment = info.event.extendedProps;
-                const startTime = info.event.start.toLocaleString('de-DE', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                const endTime = info.event.end ? info.event.end.toLocaleString('de-DE', { hour: '2-digit', minute: '2-digit' }) : 'offen';
-
-                modalTitle.textContent = info.event.title;
-                modalStartTime.textContent = startTime;
-                modalEndTime.textContent = endTime;
-                modalLocation.textContent = appointment.location || 'kein Ort angegeben';
-                modalCustomerEmail.textContent = appointment.customerEmail || 'keine';
-                modalStaffEmail.textContent = appointment.staffEmail || 'keine';
-                modalClientNote.textContent = appointment.clientNote ? appointment.clientNote.replace(/<[^>]*>/g, '') || 'keine' : 'keine';
-                modalStaffNote.textContent = appointment.staffNote ? appointment.staffNote.replace(/<[^>]*>/g, '') || 'keine' : 'keine';
-
-                modal.style.display = 'block';
-
-                closeButton.addEventListener('click', () => {
-                  modal.style.display = 'none';
-                });
-
-                window.addEventListener('click', (event) => {
-                  if (event.target == modal) {
-                    modal.style.display = 'none';
-                  }
-                });
-              },
-            });
-            calendar.render();
-            calendarModal.dataset.calendarInitialized = 'true'; // Markiere den Kalender als initialisiert
-          }
+          initializeCalendar();
+          calendarModal.dataset.calendarInitialized = 'true'; // Markiere ihn nach dem ersten Aufruf
         }
       });
     }
@@ -257,6 +155,261 @@ document.addEventListener('DOMContentLoaded', () => {
       statisticsElement.classList.remove('hidden');
     }
   }
+
+  async function fetchCalendarEvents() {
+    try {
+      const [pastResponse, futureResponse] = await Promise.all([
+        fetch('/api/past-appointments', { credentials: 'include' }),
+        fetch('/api/future-appointments', { credentials: 'include' }),
+      ]);
+
+      console.log('Past Response:', pastResponse); // Überprüfe die Response
+      console.log('Future Response:', futureResponse); // Überprüfe die Response
+
+      if (!pastResponse.ok || !futureResponse.ok) {
+        throw new Error('Fehler beim Abrufen der Termine für den Kalender');
+      }
+
+      const pastData = await pastResponse.json();
+      console.log('Past Data:', pastData); // Überprüfe die Daten
+      const futureData = await futureResponse.json();
+      console.log('Future Data:', futureData); // Überprüfe die Daten
+
+      return [...pastData.calendarEvents, ...futureData.calendarEvents];
+    } catch (error) {
+      console.error('Fehler beim Laden der Termine für den Kalender:', error);
+      // Hier könntest du eine Fehlermeldung im UI anzeigen
+      return [];
+    }
+  }
+  
+  async function initializeCalendar() {
+  console.log('Funktion initializeCalendar() wurde aufgerufen.'); // Füge diese Zeile hinzu
+  const modalCalendarEl = document.getElementById('modal-calendar');
+  const stickyHeadersContainer = document.getElementById('calendar-day-headers-sticky');
+
+  if (modalCalendarEl) {
+    const calendarEvents = await fetchCalendarEvents();
+    console.log('Kalender-Events in initializeCalendar:', calendarEvents);
+    const calendar = new FullCalendar.Calendar(modalCalendarEl, {
+      firstDay: 1,
+      initialView: 'timeGridWeek',
+      locale: 'de',
+      timeZone: 'local',
+      events: calendarEvents,
+      height: 'auto',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'timeGridWeek,listWeek',
+      },
+      eventBackgroundColor: '#e0f7fa',
+      eventBorderColor: '#5a6a7c',
+      eventTextColor: '#2c3e50',
+      views: {
+        listWeek: {
+          type: 'listWeek',
+          eventOrder: 'start'
+        }
+      },
+      eventClick: function(info) { // KORREKTE PLATZIERUNG!
+        const modal = document.getElementById('appointment-details-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalStartTime = document.getElementById('modal-start-time');
+        const modalEndTime = document.getElementById('modal-end-time');
+        const modalLocation = document.getElementById('modal-location');
+        const modalCustomerEmail = document.getElementById('modal-customer-email');
+        const modalStaffEmail = document.getElementById('modal-staff-email');
+        const modalClientNote = document.getElementById('modal-client-note');
+        const modalStaffNote = document.getElementById('modal-staff-note');
+        const closeButton = modal.querySelector('.close-button');
+        console.log(closeButton);
+
+        const appointment = info.event.extendedProps;
+        const startTime = info.event.start.toLocaleString('de-DE', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const endTime = info.event.end ? info.event.end.toLocaleString('de-DE', { hour: '2-digit', minute: '2-digit' }) : 'offen';
+
+        modalTitle.textContent = info.event.title;
+        modalStartTime.textContent = startTime;
+        modalEndTime.textContent = endTime;
+        modalLocation.textContent = appointment.location || 'kein Ort angegeben';
+        modalCustomerEmail.textContent = appointment.customerEmail || 'keine';
+        modalStaffEmail.textContent = appointment.staffEmail || 'keine';
+        modalClientNote.textContent = appointment.clientNote ? appointment.clientNote.replace(/<[^>]*>/g, '') || 'keine' : 'keine';
+        modalStaffNote.textContent = appointment.staffNote ? appointment.staffNote.replace(/<[^>]*>/g, '') || 'keine' : 'keine';
+
+        modal.style.display = 'block';
+
+        console.log('Termin Details werden angezeigt');
+
+        closeButton.addEventListener('click', () => {
+          modal.style.display = 'none';
+          console.log('Termin Details wurden geschlossen');
+        });
+        
+        window.addEventListener('click', (event) => {
+          if (event.target == modal) {
+            modal.style.display = 'none';
+            console.log('Termin Details wurden geschlossen');
+          }
+        });
+      },
+      
+      viewDidMount: (info) => {
+  const fcHeader = modalCalendarEl.querySelector('.fc-header-toolbar');
+  const calendarContent = modalCalendarEl.querySelector('.fc-view-harness');
+  const modalContent = document.querySelector('.modal-content'); // Hol das Modal Content
+  const stickyHeadersContainer = document.getElementById('calendar-day-headers-sticky');
+
+  const updateStickyHeaderWidth = () => {
+    if (calendarContent && stickyHeadersContainer) {
+      stickyHeadersContainer.style.width = `${calendarContent.getBoundingClientRect().width}px`;
+    }
+  };
+
+  if (fcHeader && calendarContent && modalContent && stickyHeadersContainer) {
+    fcHeader.style.position = 'fixed';
+    fcHeader.style.top = `0`; // Positioniere relativ zum Kalender-Container
+    fcHeader.style.left = `${calendarContent.offsetLeft}px`;
+    fcHeader.style.width = `100`;
+    fcHeader.style.zIndex = '100';
+    fcHeader.style.backgroundColor = getComputedStyle(modalContent).backgroundColor;
+    fcHeader.style.borderBottom = 'none';
+    calendarContent.style.paddingTop = `${fcHeader.offsetHeight}px`; // Platz für den Header schaffen
+
+    // Initialisiere Position und Breite des Sticky Headers
+    const headerBottom = fcHeader.getBoundingClientRect().bottom;
+    const firstDayColumn = modalCalendarEl.querySelector('.fc-timegrid-col:not(:first-child)');
+
+    if (firstDayColumn) {
+      stickyHeadersContainer.style.left = `${firstDayColumn.getBoundingClientRect().left}px`;
+    } else {
+      stickyHeadersContainer.style.left = `${calendarContent.getBoundingClientRect().left}px`; // Fallback, falls keine Tagesspalten gefunden werden
+    }
+    stickyHeadersContainer.style.top = `${headerBottom}px`;
+    stickyHeadersContainer.style.left = `${calendarContent.getBoundingClientRect().left}px`;
+    stickyHeadersContainer.style.width = `${calendarContent.getBoundingClientRect().width}px`;
+    stickyHeadersContainer.style.position = 'fixed';
+    stickyHeadersContainer.style.display = 'flex';
+    stickyHeadersContainer.style.gap = '0';
+    stickyHeadersContainer.style.borderRight= 'none';
+
+    const updateStickyHeaderPositionAndWidth = () => {
+      if (calendarContent && stickyHeadersContainer && modalCalendarEl) {
+        const contentRect = calendarContent.getBoundingClientRect();
+
+        stickyHeadersContainer.style.left = `${contentRect.left}px`; // Beginne ganz links am Kalenderinhalt
+        stickyHeadersContainer.style.width = `${contentRect.width}px`; // Nimm die volle Breite des Kalenderinhalts ein
+      }
+    };
+
+  updateStickyHeaderPositionAndWidth(); // Initial aufrufen
+
+  window.addEventListener('resize', updateStickyHeaderPositionAndWidth);
+  }
+
+  // Synchronisiere die Breite der Sticky Header-Elemente mit den Kalenderspalten
+  if (stickyHeadersContainer) {
+    const dayColumns = modalCalendarEl.querySelectorAll('.fc-timegrid-col:not(:first-child)');
+    const stickyDayHeaders = stickyHeadersContainer.querySelectorAll('.calendar-day-header-sticky-item');
+
+    if (dayColumns.length === stickyDayHeaders.length) {
+      dayColumns.forEach((col, index) => {
+        stickyDayHeaders[index].style.width = `${col.offsetWidth}px`;
+        stickyDayHeaders[index].style.textAlign = 'center';
+      });
+    } else {
+      console.warn("Anzahl der Kalenderspalten stimmt nicht mit der Anzahl der Sticky Header-Elemente überein!");
+    }
+  }
+
+    // Synchronisiere die Inhalte des Sticky Headers
+    if (stickyHeadersContainer) {
+    stickyHeadersContainer.innerHTML = ''; // Leere den Container
+
+    const firstDay = info.view.activeStart;
+    for (let i = 0; i < 7; i++) {
+      const currentDate = new Date(firstDay);
+      currentDate.setDate(firstDay.getDate() + i);
+
+      const dayOfWeekShort = currentDate.toLocaleDateString('de-DE', { weekday: 'short' });
+      const dayOfMonth = currentDate.getDate();
+
+      const headerItem = document.createElement('div');
+      headerItem.classList.add('calendar-day-header-sticky-item');
+
+      const weekdayElement = document.createElement('div');
+      weekdayElement.classList.add('weekday');
+      weekdayElement.textContent = dayOfWeekShort;
+
+      const monthDayElement = document.createElement('div');
+      monthDayElement.classList.add('month-day');
+      monthDayElement.textContent = dayOfMonth;
+
+      headerItem.appendChild(weekdayElement);
+      headerItem.appendChild(monthDayElement);
+      stickyHeadersContainer.appendChild(headerItem);
+    }
+  }
+
+  // Füge den Resize-Listener hinzu
+  window.addEventListener('resize', updateStickyHeaderWidth);
+
+},
+
+        datesSet: (info) => {
+          const stickyHeadersContainer = document.getElementById('calendar-day-headers-sticky');
+          if (stickyHeadersContainer) {
+            stickyHeadersContainer.innerHTML = '';
+            const firstDay = info.view.activeStart;
+
+            for (let i = 0; i < 7; i++) {
+              const currentDate = new Date(firstDay);
+              currentDate.setDate(firstDay.getDate() + i);
+
+              const dayOfWeekShort = currentDate.toLocaleDateString('de-DE', { weekday: 'short' });
+              const dayOfMonth = currentDate.getDate();
+
+              const headerItem = document.createElement('div');
+              headerItem.classList.add('calendar-day-header-sticky-item');
+
+              const weekdayElement = document.createElement('div');
+              weekdayElement.classList.add('weekday');
+              weekdayElement.textContent = dayOfWeekShort;
+
+              const monthDayElement = document.createElement('div');
+              monthDayElement.classList.add('month-day');
+              monthDayElement.textContent = dayOfMonth;
+
+              headerItem.appendChild(weekdayElement);
+              headerItem.appendChild(monthDayElement);
+              stickyHeadersContainer.appendChild(headerItem);
+            }
+
+            // Anpassung der Breiten an die timeGridWeek-Spalten (ohne die Zeitachse)
+            const dayColumns = modalCalendarEl.querySelectorAll('.fc-timegrid-col:not(:first-child)');
+            const stickyDayHeaders = stickyHeadersContainer.querySelectorAll('.calendar-day-header-sticky-item');
+
+            if (dayColumns.length === stickyDayHeaders.length) {
+              dayColumns.forEach((col, index) => {
+                stickyDayHeaders[index].style.width = `${col.offsetWidth}px`;
+              });
+            } else {
+              console.warn("Anzahl der Kalendertagesspalten stimmt nicht mit der Anzahl der Sticky Header-Elemente überein!");
+            }
+          }
+        },
+      selectable: true,
+      select: function(info) {
+        alert('Ausgewählt: ' + info.startStr + ' bis ' + info.endStr);
+        calendar.unselect();
+      }
+    });
+    console.log('Kalender-Events in initializeCalendar:', calendarEvents);
+
+    calendar.render();
+  }
+}
 
   async function fetchEmployeeStatistics() {
     const loadingElement = document.getElementById('employee-loading');
@@ -588,6 +741,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   return appointmentItem;
 }
+
+
   </script>
 </body>
 </html>
