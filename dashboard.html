@@ -44,6 +44,7 @@
       <div id="calendar-modal" class="modal hidden">
         <div class="modal-content">
           <span id="close-calendar-modal" class="close-button">&times;</span>
+          <h2 id="calendar-title-placeholder" style="text-align: center; margin-bottom: 10px; z-index: 1001;"></h2>
           <div id="modal-calendar"></div> <!- Hier wird der Kalender im Popup gerendert -->
           <div id="calendar-day-headers-sticky" class="calendar-day-headers-sticky">
             </div>
@@ -199,19 +200,19 @@ document.addEventListener('DOMContentLoaded', () => {
       events: calendarEvents,
       height: 'auto',
       headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'timeGridWeek,listWeek',
+        left: '',
+        center: 'prev,next today',
+        right: '',
       },
       eventBackgroundColor: '#e0f7fa',
       eventBorderColor: '#5a6a7c',
       eventTextColor: '#2c3e50',
-      views: {
-        listWeek: {
-          type: 'listWeek',
-          eventOrder: 'start'
-        }
-      },
+      // views: {
+      //   listWeek: {
+      //     type: 'listWeek',
+      //     eventOrder: 'start'
+      //   }
+      // },
       eventClick: function(info) { // KORREKTE PLATZIERUNG!
         const modal = document.getElementById('appointment-details-modal');
         const modalTitle = document.getElementById('modal-title');
@@ -256,6 +257,11 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       
       viewDidMount: (info) => {
+
+        const calendarTitlePlaceholder = document.getElementById('calendar-title-placeholder');
+  if (calendarTitlePlaceholder) {
+    calendarTitlePlaceholder.textContent = info.view.title;
+  }
   const fcHeader = modalCalendarEl.querySelector('.fc-header-toolbar');
   const calendarContent = modalCalendarEl.querySelector('.fc-view-harness');
   const modalContent = document.querySelector('.modal-content'); // Hol das Modal Content
@@ -358,6 +364,10 @@ document.addEventListener('DOMContentLoaded', () => {
 },
 
         datesSet: (info) => {
+          const calendarTitlePlaceholder = document.getElementById('calendar-title-placeholder');
+  if (calendarTitlePlaceholder) {
+    calendarTitlePlaceholder.textContent = info.view.title;
+  }
           const stickyHeadersContainer = document.getElementById('calendar-day-headers-sticky');
           if (stickyHeadersContainer) {
             stickyHeadersContainer.innerHTML = '';
